@@ -1,4 +1,4 @@
-# ASO-inspo
+# {{Project}}
 
 Welcome to the project vault — the single source of truth.
 

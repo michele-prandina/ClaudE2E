@@ -1,6 +1,27 @@
-# Claude Code Boilerplate
+# Claude Code E2E Boilerplate
 
 A reusable Claude Code configuration with a 3-agent team, Obsidian vault SSOT, 3 MCP servers, and a 7-phase project lifecycle with hard-enforced rules via hooks.
+
+## Quick Start
+
+After cloning this repo into your project, run Claude Code and paste the initialization prompt below. Claude will walk you through filling in all placeholders.
+
+### Initialization Prompt
+
+```
+Initialize this workspace for my project. Walk me through the setup:
+
+1. Ask me for my project name, then replace all {{Project}} placeholders across CLAUDE.md, .claude/project_state.md, and obsidian-vault/Home.md.
+2. Ask me for my primary languages and tech stack, then fill in the "Codebase Overview" section in CLAUDE.md and the "Tech Stack" section in .claude/project_state.md.
+3. Ask me for my developer commands (test, lint, app start), then fill in the placeholders in .claude/agents/developer.md.
+4. Ask me for my project directory structure, then fill in that placeholder in .claude/agents/developer.md.
+5. Ask me for any language-specific format rules, then fill in that placeholder in .claude/agents/developer.md.
+6. Set the project phase to "Discovery" and status to "Starting Discovery phase" in .claude/project_state.md with today's date.
+7. Run `python3 .claude/scripts/rebuild-vault-index.py` to generate the vault index.
+8. Show me a summary of all changes made.
+
+Ask me one question at a time. Do not assume anything.
+```
 
 ## What's Included
 
@@ -76,14 +97,20 @@ Synthesized vault notes link to their raw sources via `[[wikilinks]]` in `## Sou
 
 ## Setup Steps
 
-### 1. Copy to your project root
+### 1. Clone or copy to your project root
 
 ```bash
-cp -r exported_claude_config/* your-project/
-cp -r exported_claude_config/.claude your-project/
+git clone <this-repo> your-project
+cd your-project
 ```
 
-### 2. Install Obsidian Local REST API plugin
+### 2. Make hooks executable
+
+```bash
+chmod +x .claude/hooks/*.sh
+```
+
+### 3. Install Obsidian Local REST API plugin
 
 1. Open Obsidian
 2. Settings > Community Plugins > Browse > Search "Local REST API"
@@ -91,11 +118,11 @@ cp -r exported_claude_config/.claude your-project/
 4. Note the API key (Settings > Local REST API > API Key)
 5. Default port: 27124
 
-### 3. Configure Obsidian vault path
+### 4. Configure Obsidian vault path
 
 Point your Obsidian vault to the `obsidian-vault/` directory in your project root.
 
-### 4. Install MCP servers
+### 5. Install MCP servers
 
 Add to your Claude Code MCP configuration:
 
@@ -103,35 +130,9 @@ Add to your Claude Code MCP configuration:
 - **context7** — `@upstash/context7-mcp` (real-time library documentation)
 - **maestro** — `mobile-next/maestro-mcp` (UI test automation)
 
-### 5. Install skills CLI (optional)
+### 6. Run the initialization prompt
 
-```bash
-npx skills add https://github.com/vercel-labs/skills --skill find-skills
-```
-
-### 6. Make hooks executable
-
-```bash
-chmod +x .claude/hooks/*.sh
-```
-
-### 7. Fill in placeholders
-
-Edit `CLAUDE.md` and replace all `{placeholders}` with your project info:
-
-- `{Project Name}` — your project name
-- `{fill in}` — your primary languages and stack
-
-### 8. Set initial project state
-
-Edit `.claude/project_state.md`:
-- Set Phase to "Discovery"
-- Set Status to your starting status
-
-### 9. Update vault Home
-
-Edit `obsidian-vault/Home.md`:
-- Replace `{Project Name}` with your project name
+Start Claude Code and paste the initialization prompt from the Quick Start section above. Claude will walk you through filling in all placeholders for your project.
 
 ## MCP Server Configuration
 
@@ -140,29 +141,6 @@ Edit `obsidian-vault/Home.md`:
 | Obsidian | App running with Local REST API plugin | Port 27124 |
 | Context7 | No config needed | — |
 | Maestro | Java 17+, iOS Simulator or Android Emulator booted | — |
-
-## Verification
-
-After setup, verify each agent loads correctly:
-
-```bash
-claude --agent head-of-product    # Should show HoP header
-claude --agent head-of-engineering # Should show HoE header
-claude --agent developer           # Should show Developer header
-```
-
-Check hooks are executable:
-
-```bash
-ls -la .claude/hooks/
-# All .sh files should have -rwxr-xr-x permissions
-```
-
-Verify settings.json is valid:
-
-```bash
-python3 -c "import json; json.load(open('.claude/settings.json')); print('Valid JSON')"
-```
 
 ## Project Lifecycle
 
@@ -218,24 +196,22 @@ Maestro is optional. If your project doesn't need UI test automation:
 2. Remove Java 17+ and simulator from prerequisites
 3. Everything else works without it
 
-## Placeholder Checklist
+## Verification
 
-All files that need customization before first use:
+After setup, verify each agent loads correctly:
 
-| File | Placeholder | What to fill in |
-|------|------------|-----------------|
-| `CLAUDE.md` | `{Project Name}` | Your project name (appears 4 times) |
-| `CLAUDE.md` | `{fill in your primary languages}` | e.g., "TypeScript, Python" |
-| `.claude/project_state.md` | `{current milestone}` | Your first milestone name |
-| `.claude/project_state.md` | `{progress summary}` | e.g., "Starting Discovery phase" |
-| `.claude/project_state.md` | `{date}` | Today's date |
-| `.claude/agents/developer.md` | `{fill in test command}` | e.g., "pytest tests/ -v" |
-| `.claude/agents/developer.md` | `{fill in lint command}` | e.g., "eslint . --fix" |
-| `.claude/agents/developer.md` | `{fill in app start command}` | e.g., "npm run dev" |
-| `.claude/agents/developer.md` | `{fill in your tech stack}` | e.g., "Next.js, PostgreSQL, Prisma" |
-| `.claude/agents/developer.md` | `{fill in your project directory structure}` | e.g., "src/app/ (pages), src/lib/ (utils)" |
-| `.claude/agents/developer.md` | `{fill in language-specific format rules}` | e.g., "PEP 8, max 100 chars" |
-| `obsidian-vault/Home.md` | `{Project Name}` | Your project name |
+```bash
+claude --agent head-of-product    # Should show HoP header
+claude --agent head-of-engineering # Should show HoE header
+claude --agent developer           # Should show Developer header
+```
+
+Check hooks are executable:
+
+```bash
+ls -la .claude/hooks/
+# All .sh files should have -rwxr-xr-x permissions
+```
 
 ## Troubleshooting
 

@@ -6,11 +6,11 @@
 
 | Field | Value |
 |-------|-------|
-| **Phase** | Discovery |
-| **Milestone** | Market Research Complete |
-| **Status** | Research phase done. Differentiation hypothesis validated (v3). Ready for Discovery interviews. |
-| **Branch** | master |
-| **Last Updated** | 2026-02-06 |
+| **Phase** | {current phase} |
+| **Milestone** | {current milestone} |
+| **Status** | {current status} |
+| **Branch** | main |
+| **Last Updated** | {YYYY-MM-DD} |
 
 ## Key Facts
 

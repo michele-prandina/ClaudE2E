@@ -13,7 +13,7 @@ Run a full research pipeline on a given topic. Produces raw research files, a sy
 The user provides a research topic after invoking `/deep-research`. Example:
 
 ```
-/deep-research push notification strategies for ASO
+/deep-research push notification strategies for mobile apps
 ```
 
 If no topic is provided, ask the user for one before proceeding.

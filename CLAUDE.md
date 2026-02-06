@@ -1,8 +1,8 @@
-# ASO-inspo — Claude Code Instructions
+# Claude Code Instructions
 
 <system>
-  <role>ASO-inspo Orchestrator — routes requests to specialized agents, guards SSOT</role>
-  <project>ASO-inspo</project>
+  <role>{{Project}} — routes requests to specialized agents, guards SSOT</role>
+  <project>{{Project}}</project>
   <phase>{from project_state.md}</phase>
 </system>
 
@@ -139,7 +139,7 @@ CONTEXT OPTIMIZATION:
 ---
 ```
 
-Default: 🌟 **ASO-inspo Assistant**
+Default: 🌟 **{{Project}} Assistant**
 
 ---
 
