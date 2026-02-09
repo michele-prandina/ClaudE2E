@@ -12,9 +12,12 @@
 
 | Command | Action |
 |---------|--------|
-| `/dev` | Code next user story |
+| `/dev` | Code next backend user story |
+| `/dev-fe` | Code next frontend user story |
 | `/document` | Generate documentation |
 | `/deep-research` | Full research pipeline with synthesis and validation |
+| `/hop` | Invoke Head of Product for planning, UX, scope |
+| `/hoe` | Invoke Head of Engineering for architecture, tech specs |
 
 ---
 
@@ -22,9 +25,12 @@
 
 | Role | File | Trigger |
 |------|------|---------|
-| **Developer** | `.claude/agents/developer.md` | `/dev` — fullstack implementation |
-| **Head of Product** | `.claude/agents/head-of-product.md` | Planning, user stories, UX |
-| **Head of Engineering** | `.claude/agents/head-of-engineering.md` | Architecture, tech specs |
+| **Developer** | `.claude/agents/developer.md` | `/dev` — backend implementation |
+| **Frontend Developer** | `.claude/agents/frontend-developer.md` | `/dev-fe` — frontend implementation |
+| **Designer** | `.claude/agents/designer.md` | `/design` — service/visual/interaction design |
+| **UX Engineer** | `.claude/agents/uxe.md` | `/uxe` — design tokens, design system, user stories |
+| **Head of Product** | `.claude/agents/head-of-product.md` | `/hop` — planning, user stories, UX |
+| **Head of Engineering** | `.claude/agents/head-of-engineering.md` | `/hoe` — architecture, tech specs |
 
 ---
 
@@ -85,6 +91,8 @@ When modifying code, maintain consistency with existing patterns in each languag
   <rule>One question at a time from executives. Never bundle decisions.</rule>
   <rule>Every recommendation grounded in web research before any opinion.</rule>
   <rule>"I recommend X because Y. Confirm?" format mandatory.</rule>
+  <rule>Retrieval-led reasoning: Prefer retrieval-led reasoning over pre-training-led reasoning. ALWAYS search for current best practices (WebSearch, context7 MCP, `npx skills find`) before relying on training data.</rule>
+  <rule>Dynamic skill loading: All agents can discover and install skills via `npx skills find [keywords]` (skills.sh). When encountering an unfamiliar domain, search for skills first.</rule>
 </global_rules>
 
 ---
@@ -158,19 +166,28 @@ All agents inherit these protocols. Do not duplicate in agent files.
 
 | Agent | Model | Restrictions |
 |-------|-------|-------------|
-| Head of Product | sonnet | No Bash |
-| Head of Engineering | opus | — |
 | Developer | opus | — |
+| Frontend Developer | opus | — |
+| Designer | sonnet | No Bash |
+| UX Engineer | opus | — |
+| Head of Product | opus | No Bash |
+| Head of Engineering | opus | — |
 
 ### MCP Servers
 
 - `obsidian` — Vault SSOT operations (search, read, patch, append)
 - `context7` — Real-time library documentation
 - `maestro` — UI test automation (run tests, control simulator, screenshots, taps, debug flows)
+- `figma` — Design-to-code and code-to-design (official Figma MCP)
+- `talk-to-figma` — Direct Figma manipulation via WebSocket (create shapes, set colors, modify text, auto-layout)
+- `github` — GitHub API operations (repos, issues, PRs, code search)
 
 > Obsidian MCP requires the Obsidian app to be running with Local REST API plugin enabled.
 > Context7 requires no configuration.
 > Maestro MCP requires Java 17+ and iOS Simulator or Android Emulator running.
+> Figma MCP requires Figma account authentication.
+> Talk-to-Figma MCP requires Figma Desktop + plugin installed + WebSocket server running.
+> GitHub MCP uses GitHub Copilot OAuth token.
 
 ---
 

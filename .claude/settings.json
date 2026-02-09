@@ -32,5 +32,23 @@
         ]
       }
     ]
+  },
+  "sandbox": {
+    "enabled": true,
+    "mode": "auto-allow",
+    "allowUnsandboxedCommands": false,
+    "network": {
+      "allowedDomains": [
+        "registry.npmjs.org",
+        "api.anthropic.com",
+        "github.com",
+        "api.github.com",
+        "pypi.org",
+        "expo.dev"
+      ]
+    }
+  },
+  "env": {
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
   }
 }

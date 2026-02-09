@@ -1,35 +1,21 @@
 # Claude Code E2E Boilerplate
 
-A reusable Claude Code configuration with a 3-agent team, Obsidian vault SSOT, 3 MCP servers, and a 7-phase project lifecycle with hard-enforced rules via hooks.
+A reusable Claude Code configuration with a 6-agent team, Obsidian vault SSOT, 6 MCP servers, agent teams support, and a 7-phase project lifecycle with hard-enforced rules via hooks.
 
 ## Quick Start
 
-After cloning this repo into your project, run Claude Code and paste the initialization prompt below. Claude will walk you through filling in all placeholders.
-
-### Initialization Prompt
-
-```
-Initialize this workspace for my project. Walk me through the setup:
-
-1. Ask me for my project name, then replace all {{Project}} placeholders across CLAUDE.md, .claude/project_state.md, and obsidian-vault/Home.md.
-2. Ask me for my primary languages and tech stack, then fill in the "Codebase Overview" section in CLAUDE.md and the "Tech Stack" section in .claude/project_state.md.
-3. Ask me for my developer commands (test, lint, app start), then fill in the placeholders in .claude/agents/developer.md.
-4. Ask me for my project directory structure, then fill in that placeholder in .claude/agents/developer.md.
-5. Ask me for any language-specific format rules, then fill in that placeholder in .claude/agents/developer.md.
-6. Set the project phase to "Discovery" and status to "Starting Discovery phase" in .claude/project_state.md with today's date.
-7. Run `python3 .claude/scripts/rebuild-vault-index.py` to generate the vault index.
-8. Show me a summary of all changes made.
-
-Ask me one question at a time. Do not assume anything.
-```
+1. Clone this repo into your project root
+2. Make hooks executable: `chmod +x .claude/hooks/*.sh`
+3. Configure MCP servers (see below)
+4. Start Claude Code and ask it to initialize the workspace — it will walk you through filling in all `{{Project}}` and `{fill in}` placeholders across agent files and CLAUDE.md
 
 ## What's Included
 
 | Component | Description |
 |-----------|-------------|
 | `CLAUDE.md` | Orchestrator + Chief of Staff (routes requests, guards SSOT) |
-| `.claude/agents/` | 3 agents: Developer, Head of Product, Head of Engineering |
-| `.claude/skills/` | Skills: `/deep-research` (full research pipeline with synthesis and validation) |
+| `.claude/agents/` | 6 agents: Developer, Frontend Developer, Designer, UX Engineer, Head of Product, Head of Engineering |
+| `.claude/skills/` | Skills: Deep Research (multi-phase pipeline), Maestro (UI testing) |
 | `.claude/protocols/` | Shared protocols: vault-sync, error-logging |
 | `.claude/hooks/` | Hard enforcement: phase gating, commit format, vault ownership |
 | `.claude/scripts/` | Vault maintenance: rebuild index, audit wikilinks |
@@ -37,25 +23,32 @@ Ask me one question at a time. Do not assume anything.
 
 ## How It Works
 
-This boilerplate gives you a team of 3 AI agents that collaborate through an Obsidian vault (the single source of truth). Each agent has a defined role, owns specific vault folders, and is structurally prevented from overstepping via shell hooks.
+This boilerplate gives you a team of 6 AI agents that collaborate through an Obsidian vault (the single source of truth). Each agent has a defined role, owns specific vault folders, and is structurally prevented from overstepping via shell hooks.
 
 **The agents:**
 
 | Agent | Role | Think of it as... |
 |-------|------|-------------------|
-| Head of Product | Defines *what* to build and *why* | Your CPO — owns scope, user stories, research. Defaults to `/deep-research` for any topic not in the vault. |
+| Head of Product | Defines *what* to build and *why* | Your CPO — owns scope, user stories, research |
 | Head of Engineering | Defines *how* to build it | Your CTO — owns architecture, tech specs, ADRs |
-| Developer | Builds it | Your senior dev — owns source code, implements stories |
+| Designer | Designs *how it looks and feels* | Your product designer — owns service design, visual design, branding |
+| UX Engineer | Bridges design and code | Your design engineer — owns tokens, design system, writes user stories |
+| Developer | Builds the backend | Your senior backend dev — owns server-side code, implements stories |
+| Frontend Developer | Builds the frontend | Your senior frontend dev — owns client-side code, implements UI stories |
+
+**Agent Teams:** Head of Engineering can spawn teams of Developers, Frontend Developers, and UX Engineers for parallel work. Head of Product can spawn teams of Designers and UX Engineers. This requires the `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` environment variable (pre-configured in settings.json).
 
 **Skills:**
 
 | Skill | Trigger | Description |
 |-------|---------|-------------|
-| Deep Research | `/deep-research <topic>` | Full pipeline: keyword generation, web search, optional user supplement, synthesis into vault note, cross-vault validation |
+| Deep Research | `/deep-research <topic>` | Multi-phase pipeline: planner, parallel retrievers, gap analysis, writer, verifier |
+| Maestro | `/maestro` | Create and run Maestro UI test flows |
+| Dynamic Skills | `npx skills find [keywords]` | All agents can discover and install skills from skills.sh |
 
 **The workflow:**
 1. Start in **Discovery** (Phase 0) — HoP interviews you across 7 dimensions
-2. Progress through **Strategy** → **Product Spec** → **Architecture** → **Backlog**
+2. Progress through **Strategy** > **Product Spec** > **Architecture** > **Backlog**
 3. Only in **Implementation** (Phase 5) can anyone write code or commit
 4. Each phase transition requires your explicit approval
 
@@ -92,8 +85,10 @@ Synthesized vault notes link to their raw sources via `[[wikilinks]]` in `## Sou
 - Node.js 18+
 - [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code) installed
 - [Obsidian](https://obsidian.md/) app installed
-- Java 17+ (for Maestro UI testing)
-- iOS Simulator or Android Emulator (for Maestro)
+- Java 17+ (for Maestro UI testing, optional)
+- iOS Simulator or Android Emulator (for Maestro, optional)
+- [Figma](https://www.figma.com/) account (for design workflows, optional)
+- Figma Desktop + Talk-to-Figma plugin (for direct Figma manipulation, optional)
 
 ## Setup Steps
 
@@ -122,17 +117,26 @@ chmod +x .claude/hooks/*.sh
 
 Point your Obsidian vault to the `obsidian-vault/` directory in your project root.
 
-### 5. Install MCP servers
+### 5. Configure MCP servers
 
-Add to your Claude Code MCP configuration:
+Update `.mcp.json` with your credentials:
 
-- **obsidian** — `MarkusPfundstein/mcp-obsidian` (vault SSOT operations)
-- **context7** — `@upstash/context7-mcp` (real-time library documentation)
-- **maestro** — `mobile-next/maestro-mcp` (UI test automation)
+- **obsidian** — Set `OBSIDIAN_API_KEY` to your Local REST API key
+- **context7** — No configuration needed
+- **maestro** — Set `<HOME_DIR>` to your home directory path
+- **figma** — No configuration needed (uses Figma account auth)
+- **github** — Set `<YOUR_GITHUB_TOKEN>` to your GitHub token
+- **talk-to-figma** — Set `<PATH_TO_TALK_TO_FIGMA_SERVER>` to the server.js location
 
-### 6. Run the initialization prompt
+### 6. Initialize the workspace
 
-Start Claude Code and paste the initialization prompt from the Quick Start section above. Claude will walk you through filling in all placeholders for your project.
+Start Claude Code and ask it to initialize the workspace. It will walk you through:
+1. Setting your project name (replaces `{{Project}}` placeholders)
+2. Defining your tech stack and languages
+3. Filling in developer/frontend commands (test, lint, start)
+4. Setting up project structure
+5. Configuring language-specific rules
+6. Setting the initial project phase
 
 ## MCP Server Configuration
 
@@ -141,6 +145,9 @@ Start Claude Code and paste the initialization prompt from the Quick Start secti
 | Obsidian | App running with Local REST API plugin | Port 27124 |
 | Context7 | No config needed | — |
 | Maestro | Java 17+, iOS Simulator or Android Emulator booted | — |
+| Figma | Figma account authentication | — |
+| Talk-to-Figma | Figma Desktop + plugin + WebSocket server | — |
+| GitHub | GitHub token | — |
 
 ## Project Lifecycle
 
@@ -167,8 +174,9 @@ Enforced by the `post-edit.sh` hook:
 | `Strategy/`, `Product/`, `Research/` | Head of Product |
 | `Tech Specs/`, `Decision Log/` | Head of Engineering |
 | `Tech Specs/Known Errors/` | Developer (exception) |
-| `Backlog/` | HoP, HoE, Developer |
-| Source code (outside vault) | Developer only |
+| `Design/` | Designer, UX Engineer |
+| `Backlog/` | HoP, HoE, Developer, UXE |
+| Source code (outside vault) | Developer, Frontend Developer, UXE |
 
 ## Customization
 
@@ -189,21 +197,25 @@ Enforced by the `post-edit.sh` hook:
 Edit `.claude/project_state.md` — the Phase field is read by hooks to gate actions.
 Valid phases: Discovery, Strategy, Product Spec, Architecture, Backlog, Implementation, Integration.
 
-### Removing Maestro (if not doing mobile)
+### Removing optional MCP servers
 
-Maestro is optional. If your project doesn't need UI test automation:
-1. Remove the `maestro` MCP server from your config
-2. Remove Java 17+ and simulator from prerequisites
-3. Everything else works without it
+Maestro, Figma, Talk-to-Figma, and GitHub are optional. If your project doesn't need them:
+1. Remove the server from `.mcp.json`
+2. Remove from `enabledMcpjsonServers` in `.claude/settings.local.json`
+3. Remove related prerequisites
+4. Everything else works without them
 
 ## Verification
 
 After setup, verify each agent loads correctly:
 
 ```bash
-claude --agent head-of-product    # Should show HoP header
-claude --agent head-of-engineering # Should show HoE header
-claude --agent developer           # Should show Developer header
+claude --agent head-of-product      # Should show HoP header
+claude --agent head-of-engineering   # Should show HoE header
+claude --agent developer             # Should show Developer header
+claude --agent frontend-developer    # Should show FE Developer header
+claude --agent designer              # Should show Designer header
+claude --agent uxe                   # Should show UXE header
 ```
 
 Check hooks are executable:
@@ -223,3 +235,4 @@ ls -la .claude/hooks/
 | Hooks not triggering | Verify `settings.json` is in `.claude/` (not `.claude/settings/`). Check `chmod +x` on `.sh` files. |
 | Agent can't edit a file it should own | Check `post-edit.sh` — the orchestrator is always allowed. Run as default session to bypass. |
 | Python not found in hooks | Hooks use `python3`. Ensure it's in your PATH. |
+| Agent teams not working | Verify `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` is set in `.claude/settings.json` under `env`. |
