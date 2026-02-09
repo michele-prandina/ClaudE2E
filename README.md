@@ -1,61 +1,85 @@
 # Claude Code E2E Boilerplate
 
-A reusable Claude Code configuration with a 6-agent team, Obsidian vault SSOT, 6 MCP servers, agent teams support, and a 7-phase project lifecycle with hard-enforced rules via hooks.
+A reusable multi-agent AI development boilerplate with 6 specialized agents, an Obsidian vault SSOT, 7 MCP servers, agent teams support, and an 8-phase project lifecycle with hard-enforced rules via hooks. Cross-IDE compatible with Claude Code, Cursor, and Google Antigravity.
 
 ## Quick Start
 
 1. Clone this repo into your project root
 2. Make hooks executable: `chmod +x .claude/hooks/*.sh`
 3. Configure MCP servers (see below)
-4. Start Claude Code and ask it to initialize the workspace — it will walk you through filling in all `{{Project}}` and `{fill in}` placeholders across agent files and CLAUDE.md
+4. Start your IDE and ask it to initialize the workspace — it will walk you through filling in all `{{Project}}` and `{fill in}` placeholders
+
+## IDE Support
+
+This boilerplate ships with native configuration for three AI-powered IDEs:
+
+| IDE | Config Folder | Format | Status |
+|-----|---------------|--------|--------|
+| **Claude Code** | `.claude/` | Agents (`.md`), Skills (`SKILL.md`), Hooks (`.sh`) | Primary |
+| **Cursor** | `.cursor/rules/` | Rules (`.mdc` with YAML frontmatter) | Ported |
+| **Google Antigravity** | `.agent/` | Rules (`.md`), Skills (`SKILL.md`), Workflows (`.md`) | Ported |
+
+All three share the same Obsidian vault, protocols, and project lifecycle. The agent definitions and skills are adapted to each IDE's native format.
 
 ## What's Included
 
 | Component | Description |
 |-----------|-------------|
 | `CLAUDE.md` | Orchestrator + Chief of Staff (routes requests, guards SSOT) |
-| `.claude/agents/` | 6 agents: Developer, Frontend Developer, Designer, UX Engineer, Head of Product, Head of Engineering |
-| `.claude/skills/` | Skills: Deep Research (multi-phase pipeline), Maestro (UI testing) |
+| `AGENTS.md` | Antigravity agent roster and project overview |
+| `.claude/agents/` | 6 agents for Claude Code |
+| `.claude/skills/` | Skills: Deep Research, Agent Stories, Mermaid Diagrams, Find Skills, Maestro |
 | `.claude/protocols/` | Shared protocols: vault-sync, error-logging |
 | `.claude/hooks/` | Hard enforcement: phase gating, commit format, vault ownership |
 | `.claude/scripts/` | Vault maintenance: rebuild index, audit wikilinks |
+| `.cursor/rules/` | Cursor-native rules: agents as personas, skills as rules |
+| `.agent/rules/` | Antigravity-native rules and agent personas |
+| `.agent/skills/` | Skills in Antigravity format (same SKILL.md structure) |
+| `.agent/workflows/` | Antigravity workflows triggered via `/commands` |
 | `obsidian-vault/` | Obsidian vault — SSOT with research notes, sources, and project docs |
 
 ## How It Works
 
 This boilerplate gives you a team of 6 AI agents that collaborate through an Obsidian vault (the single source of truth). Each agent has a defined role, owns specific vault folders, and is structurally prevented from overstepping via shell hooks.
 
-**The agents:**
+### The Agents
 
 | Agent | Role | Think of it as... |
 |-------|------|-------------------|
-| Head of Product | Defines *what* to build and *why* | Your CPO — owns scope, user stories, research |
+| Head of Product | Defines *what* to build and *why* | Your CPO — owns scope, research, strategy |
 | Head of Engineering | Defines *how* to build it | Your CTO — owns architecture, tech specs, ADRs |
-| Designer | Designs *how it looks and feels* | Your product designer — owns service design, visual design, branding |
-| UX Engineer | Bridges design and code | Your design engineer — owns tokens, design system, writes user stories |
-| Developer | Builds the backend | Your senior backend dev — owns server-side code, implements stories |
-| Frontend Developer | Builds the frontend | Your senior frontend dev — owns client-side code, implements UI stories |
+| Designer | Designs *how it looks and feels* | Your product designer — owns service design, visual design, iOS HIG |
+| UX Engineer | Bridges design and code, writes stories | Your design engineer — owns tokens, design system, writes the backlog |
+| Developer | Builds the backend | Your senior backend dev — implements stories |
+| Frontend Developer | Builds the frontend | Your senior frontend dev — implements UI stories |
 
 **Agent Teams:** Head of Engineering can spawn teams of Developers, Frontend Developers, and UX Engineers for parallel work. Head of Product can spawn teams of Designers and UX Engineers. This requires the `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` environment variable (pre-configured in settings.json).
 
-**Skills:**
+### Skills
 
 | Skill | Trigger | Description |
 |-------|---------|-------------|
 | Deep Research | `/deep-research <topic>` | Multi-phase pipeline: planner, parallel retrievers, gap analysis, writer, verifier |
+| Agent Stories | `/agent-stories` | Write XML-tagged user stories optimized for AI coding agents (300-800 tokens each) |
+| Mermaid Diagrams | Auto-detected | Comprehensive guide for all Mermaid diagram types (class, sequence, flowchart, ERD, C4, state) |
+| Find Skills | Auto-detected | Discover and install skills from the skills.sh ecosystem |
 | Maestro | `/maestro` | Create and run Maestro UI test flows |
 | Dynamic Skills | `npx skills find [keywords]` | All agents can discover and install skills from skills.sh |
 
-**The workflow:**
-1. Start in **Discovery** (Phase 0) — HoP interviews you across 7 dimensions
-2. Progress through **Strategy** > **Product Spec** > **Architecture** > **Backlog**
-3. Only in **Implementation** (Phase 5) can anyone write code or commit
-4. Each phase transition requires your explicit approval
+### The Workflow
 
-**The enforcement:**
+1. Start in **Setup** (Phase 0) — fill in all placeholders and configure the workspace
+2. Progress through **Research & Discovery** > **Strategy** > **Product Spec** > **Architecture** > **Backlog**
+3. Only in **Implementation** (Phase 6) can anyone write code or commit
+4. Each phase transition requires your explicit approval
+5. Deep Research runs horizontally before every phase transition
+6. User can jump between phases (system warns but doesn't block)
+
+### The Enforcement
+
 - `pre-bash.sh` — blocks code/git operations until Implementation phase; enforces conventional commit format
 - `post-edit.sh` — blocks agents from editing vault folders they don't own; validates project_state.md
-- `session-start.sh` — tracks which agent is active for ownership checks
+- `session-start.sh` — tracks which agent is active; warns if `{{Project}}` placeholders remain
 
 ## Vault Structure
 
@@ -63,17 +87,24 @@ This boilerplate gives you a team of 6 AI agents that collaborate through an Obs
 obsidian-vault/
 ├── Home.md
 ├── Research/
-│   ├── Research Index.md          # Hub page linking all deliverables
-│   ├── <Synthesized notes>.md     # One per research topic
-│   └── Sources/                   # Raw research (Perplexity + agent-generated)
-│       └── YYYY-MM-DD-<topic>/    # Created by /deep-research runs
+│   ├── Research Index.md
+│   ├── <Synthesized notes>.md
+│   └── Sources/
+│       └── YYYY-MM-DD-<topic>/
 │           ├── keywords.md
 │           ├── raw-findings.md
 │           └── validation-log.md
 ├── Strategy/
 ├── Product/
+├── Design/
+│   ├── Brand/
+│   ├── Component Specs/
+│   ├── Wireframes/
+│   └── Visual QA/
 ├── Backlog/
+│   └── Stories/
 ├── Tech Specs/
+│   └── Known Errors/
 ├── Decision Log/
 └── Claude Code/
 ```
@@ -83,7 +114,7 @@ Synthesized vault notes link to their raw sources via `[[wikilinks]]` in `## Sou
 ## Prerequisites
 
 - Node.js 18+
-- [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code) installed
+- [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code), [Cursor](https://cursor.com), or [Google Antigravity](https://antigravity.google/) installed
 - [Obsidian](https://obsidian.md/) app installed
 - Java 17+ (for Maestro UI testing, optional)
 - iOS Simulator or Android Emulator (for Maestro, optional)
@@ -99,7 +130,7 @@ git clone <this-repo> your-project
 cd your-project
 ```
 
-### 2. Make hooks executable
+### 2. Make hooks executable (Claude Code)
 
 ```bash
 chmod +x .claude/hooks/*.sh
@@ -124,13 +155,14 @@ Update `.mcp.json` with your credentials:
 - **obsidian** — Set `OBSIDIAN_API_KEY` to your Local REST API key
 - **context7** — No configuration needed
 - **maestro** — Set `<HOME_DIR>` to your home directory path
+- **pencil** — No configuration needed (environment-level server)
 - **figma** — No configuration needed (uses Figma account auth)
 - **github** — Set `<YOUR_GITHUB_TOKEN>` to your GitHub token
 - **talk-to-figma** — Set `<PATH_TO_TALK_TO_FIGMA_SERVER>` to the server.js location
 
 ### 6. Initialize the workspace
 
-Start Claude Code and ask it to initialize the workspace. It will walk you through:
+Start your IDE and ask it to initialize the workspace. It will walk you through:
 1. Setting your project name (replaces `{{Project}}` placeholders)
 2. Defining your tech stack and languages
 3. Filling in developer/frontend commands (test, lint, start)
@@ -144,26 +176,30 @@ Start Claude Code and ask it to initialize the workspace. It will walk you throu
 |--------|-------------|---------|
 | Obsidian | App running with Local REST API plugin | Port 27124 |
 | Context7 | No config needed | — |
-| Maestro | Java 17+, iOS Simulator or Android Emulator booted | — |
+| Maestro | Java 17+, iOS Simulator or Android Emulator | — |
+| Pencil | No config needed (environment-level) | — |
 | Figma | Figma account authentication | — |
 | Talk-to-Figma | Figma Desktop + plugin + WebSocket server | — |
 | GitHub | GitHub token | — |
 
 ## Project Lifecycle
 
-This boilerplate enforces a 7-phase lifecycle via hooks:
+This boilerplate enforces an 8-phase lifecycle via hooks:
 
-| Phase | Owner | Gate |
-|-------|-------|------|
-| 0. Discovery | HoP | User confirms each of 7 dimensions |
-| 1. Strategy | HoP | User approves direction |
-| 2. Product Spec | HoP | User approves PRD |
-| 3. Architecture | HoE | User approves architecture |
-| 4. Backlog | HoP + HoE | User approves backlog |
-| 5. Implementation | Developer | Tests pass per story |
-| 6. Integration | Developer + HoE | User approves release |
+| Phase | Name | Owner | Gate |
+|-------|------|-------|------|
+| 0 | Setup | Orchestrator | All `{{Project}}` placeholders replaced |
+| 1 | Research & Discovery | HoP + Deep Research | User confirms understanding of space |
+| 2 | Strategy | HoP | User approves strategic direction |
+| 3 | Product Spec | HoP + Designer + UXE | Visual designs, Storybook, PRD approved |
+| 4 | Architecture | HoE | User approves architecture |
+| 5 | Backlog | UXE (informed by HoP + HoE) | User approves stories |
+| 6 | Implementation | Developer + FE Developer | Tests pass per story |
+| 7 | Integration | Developer + FE Developer + HoE | User approves release |
 
-Source code and git operations are **blocked** until Phase 5 (Implementation). This is enforced by the `pre-bash.sh` hook.
+Source code and git operations are **blocked** until Phase 6 (Implementation). This is enforced by the `pre-bash.sh` hook.
+
+Phases 4 and 5 can run in parallel — Architecture and Backlog are independent work streams.
 
 ## Vault Ownership
 
@@ -175,31 +211,56 @@ Enforced by the `post-edit.sh` hook:
 | `Tech Specs/`, `Decision Log/` | Head of Engineering |
 | `Tech Specs/Known Errors/` | Developer (exception) |
 | `Design/` | Designer, UX Engineer |
-| `Backlog/` | HoP, HoE, Developer, UXE |
+| `Backlog/` | UXE, HoP, HoE, Developer |
 | Source code (outside vault) | Developer, Frontend Developer, UXE |
+
+## Cross-IDE File Mapping
+
+| Concept | Claude Code | Cursor | Antigravity |
+|---------|------------|--------|-------------|
+| Main instructions | `CLAUDE.md` | `.cursor/rules/project-instructions.mdc` | `.agent/rules/project-instructions.md` + `AGENTS.md` |
+| Agent definitions | `.claude/agents/*.md` | `.cursor/rules/agents/*.mdc` | `.agent/rules/agents/*.md` |
+| Skills | `.claude/skills/*/SKILL.md` | `.cursor/rules/skills/*.mdc` | `.agent/skills/*/SKILL.md` |
+| Protocols | `.claude/protocols/*.md` | `.cursor/rules/protocols/*.mdc` | `.agent/rules/protocols/*.md` |
+| Hooks | `.claude/hooks/*.sh` | N/A (Cursor has no hooks) | N/A |
+| Slash commands | CLAUDE.md Quick Start | N/A | `.agent/workflows/*.md` |
+| Settings | `.claude/settings.json` | Cursor settings UI | Antigravity settings UI |
 
 ## Customization
 
 ### Adding agents
 
-1. Create `.claude/agents/{name}.md` with YAML frontmatter
-2. Add to the Agents table in `CLAUDE.md`
+1. Create agent file in all three IDE configs:
+   - `.claude/agents/{name}.md` with Claude YAML frontmatter
+   - `.cursor/rules/agents/{name}.mdc` with `.mdc` frontmatter
+   - `.agent/rules/agents/{name}.md` as plain markdown
+2. Add to `CLAUDE.md` Agents table, `AGENTS.md`, and `.cursor/rules/project-instructions.mdc`
 3. Update `post-edit.sh` if the agent owns vault folders
 
 ### Adding protocols
 
-1. Create `.claude/protocols/{name}.md`
-2. Reference in agent files under `<protocols>` section
-3. Add to Protocols table in `CLAUDE.md`
+1. Create the protocol in all three configs:
+   - `.claude/protocols/{name}.md`
+   - `.cursor/rules/protocols/{name}.mdc`
+   - `.agent/rules/protocols/{name}.md`
+2. Reference in agent files and `CLAUDE.md`
+
+### Adding skills
+
+1. Create the skill:
+   - `.claude/skills/{name}/SKILL.md` (Claude + Antigravity use same format)
+   - Copy to `.agent/skills/{name}/SKILL.md`
+   - Create `.cursor/rules/skills/{name}.mdc` with `.mdc` frontmatter wrapper
+2. Reference in relevant agent `docs_index` sections
 
 ### Changing phases
 
 Edit `.claude/project_state.md` — the Phase field is read by hooks to gate actions.
-Valid phases: Discovery, Strategy, Product Spec, Architecture, Backlog, Implementation, Integration.
+Valid phases: Setup, Research & Discovery, Strategy, Product Spec, Architecture, Backlog, Implementation, Integration.
 
 ### Removing optional MCP servers
 
-Maestro, Figma, Talk-to-Figma, and GitHub are optional. If your project doesn't need them:
+Maestro, Figma, Talk-to-Figma, Pencil, and GitHub are optional. If your project doesn't need them:
 1. Remove the server from `.mcp.json`
 2. Remove from `enabledMcpjsonServers` in `.claude/settings.local.json`
 3. Remove related prerequisites
@@ -210,12 +271,13 @@ Maestro, Figma, Talk-to-Figma, and GitHub are optional. If your project doesn't 
 After setup, verify each agent loads correctly:
 
 ```bash
-claude --agent head-of-product      # Should show HoP header
-claude --agent head-of-engineering   # Should show HoE header
-claude --agent developer             # Should show Developer header
-claude --agent frontend-developer    # Should show FE Developer header
-claude --agent designer              # Should show Designer header
-claude --agent uxe                   # Should show UXE header
+# Claude Code
+claude --agent head-of-product
+claude --agent head-of-engineering
+claude --agent developer
+claude --agent frontend-developer
+claude --agent designer
+claude --agent uxe
 ```
 
 Check hooks are executable:
@@ -236,3 +298,5 @@ ls -la .claude/hooks/
 | Agent can't edit a file it should own | Check `post-edit.sh` — the orchestrator is always allowed. Run as default session to bypass. |
 | Python not found in hooks | Hooks use `python3`. Ensure it's in your PATH. |
 | Agent teams not working | Verify `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` is set in `.claude/settings.json` under `env`. |
+| npm EPERM on skills install | Run `sudo chown -R $(whoami) ~/.npm` to fix root-owned cache files. |
+| `{{Project}}` warning on session start | Run workspace initialization to replace all placeholders. |
