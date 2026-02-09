@@ -47,6 +47,7 @@ if [ -f "$AGENT_FILE" ]; then
 fi
 
 # --- PHASE GATING ---
+# Valid phases: Setup, Research & Discovery, Strategy, Product Spec, Architecture, Backlog, Implementation, Integration
 # Only allow code/git operations during Implementation or Integration
 if [ "$PHASE" != "Implementation" ] && [ "$PHASE" != "Integration" ]; then
 

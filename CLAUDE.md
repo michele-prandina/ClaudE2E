@@ -16,8 +16,11 @@
 | `/dev-fe` | Code next frontend user story |
 | `/document` | Generate documentation |
 | `/deep-research` | Full research pipeline with synthesis and validation |
+| `/agent-stories` | Write agent-optimized user stories |
 | `/hop` | Invoke Head of Product for planning, UX, scope |
 | `/hoe` | Invoke Head of Engineering for architecture, tech specs |
+| `/design` | Invoke Designer for service/visual/interaction design |
+| `/uxe` | Invoke UX Engineer for tokens, design system, user stories |
 
 ---
 
@@ -25,12 +28,12 @@
 
 | Role | File | Trigger |
 |------|------|---------|
+| **Head of Product** | `.claude/agents/head-of-product.md` | Planning, user stories, UX |
+| **Head of Engineering** | `.claude/agents/head-of-engineering.md` | Architecture, tech specs |
+| **Designer** | `.claude/agents/designer.md` | Visual design, service design, iOS HIG |
+| **UX Engineer** | `.claude/agents/uxe.md` | Design system, Storybook, user stories |
 | **Developer** | `.claude/agents/developer.md` | `/dev` — backend implementation |
-| **Frontend Developer** | `.claude/agents/frontend-developer.md` | `/dev-fe` — frontend implementation |
-| **Designer** | `.claude/agents/designer.md` | `/design` — service/visual/interaction design |
-| **UX Engineer** | `.claude/agents/uxe.md` | `/uxe` — design tokens, design system, user stories |
-| **Head of Product** | `.claude/agents/head-of-product.md` | `/hop` — planning, user stories, UX |
-| **Head of Engineering** | `.claude/agents/head-of-engineering.md` | `/hoe` — architecture, tech specs |
+| **FE Developer** | `.claude/agents/frontend-developer.md` | Frontend implementation |
 
 ---
 
@@ -43,17 +46,27 @@ When modifying code, maintain consistency with existing patterns in each languag
 
 ---
 
-## Project Lifecycle (7 Phases)
+## Project Lifecycle (8 Phases)
 
-| Phase | Owner | Gate |
-|-------|-------|------|
-| 0. Discovery | HoP | User confirms each of 7 dimensions |
-| 1. Strategy | HoP | User approves direction |
-| 2. Product Spec | HoP | User approves PRD |
-| 3. Architecture | HoE + Skill Pass 1 | User approves architecture |
-| 4. Backlog | HoP + HoE + Skill Pass 2 | User approves backlog |
-| 5. Implementation | Developer | Tests pass per story |
-| 6. Integration | Developer + HoE | User approves release |
+| Phase | Name | Owner | Gate |
+|-------|------|-------|------|
+| 0 | Setup | Orchestrator | All `{{Project}}` placeholders replaced |
+| 1 | Research & Discovery | HoP + Deep Research | User confirms understanding of space |
+| 2 | Strategy | HoP | User approves strategic direction |
+| 3 | Product Spec | HoP + Designer + UXE | Visual designs, Storybook, PRD approved |
+| 4 | Architecture | HoE | User approves architecture |
+| 5 | Backlog | UXE (informed by HoP + HoE) | User approves stories |
+| 6 | Implementation | Developer + FE Developer | Tests pass per story |
+| 7 | Integration | Developer + FE Developer + HoE | User approves release |
+
+### Phase 0: Setup (BLOCKING)
+If the workspace contains `{{Project}}` placeholders, the system MUST walk the user through initialization before any other work. This includes: project name, target platform, design tone, tech stack, and MCP server configuration.
+
+**Horizontal: Deep Research** — runs before every phase transition. Agents must research best practices before starting any phase.
+
+**Non-blocking**: User can jump between phases. System warns (not blocks) when prerequisites are incomplete.
+
+**Phases 4-5 can run in parallel**: Architecture and Backlog are independent work streams.
 
 ---
 
@@ -93,6 +106,11 @@ When modifying code, maintain consistency with existing patterns in each languag
   <rule>"I recommend X because Y. Confirm?" format mandatory.</rule>
   <rule>Retrieval-led reasoning: Prefer retrieval-led reasoning over pre-training-led reasoning. ALWAYS search for current best practices (WebSearch, context7 MCP, `npx skills find`) before relying on training data.</rule>
   <rule>Dynamic skill loading: All agents can discover and install skills via `npx skills find [keywords]` (skills.sh). When encountering an unfamiliar domain, search for skills first.</rule>
+  <rule>MANDATORY: Max 2 paragraphs per response section. Split wall of text into smaller chunks with headers.</rule>
+  <rule>MANDATORY: Always explain WHY a recommendation is best compared to alternatives.</rule>
+  <rule>MANDATORY: Research freshness — all web searches must target max past 1 year. Flag older data.</rule>
+  <rule>MANDATORY: Use Mermaid syntax for all flows, journeys, state diagrams, and architecture diagrams.</rule>
+  <rule>Sub-agent model default: When spawning sub-agents via Task tool, use model: "sonnet" unless opus is explicitly required for the task complexity.</rule>
 </global_rules>
 
 ---
@@ -166,28 +184,44 @@ All agents inherit these protocols. Do not duplicate in agent files.
 
 | Agent | Model | Restrictions |
 |-------|-------|-------------|
-| Developer | opus | — |
-| Frontend Developer | opus | — |
-| Designer | sonnet | No Bash |
-| UX Engineer | opus | — |
 | Head of Product | opus | No Bash |
 | Head of Engineering | opus | — |
+| Designer | opus | No Bash |
+| UX Engineer | opus | — |
+| Developer | opus | — |
+| FE Developer | opus | — |
+
+> When spawning sub-agents via Task tool, default to `model: "sonnet"` unless the task requires opus-level reasoning.
 
 ### MCP Servers
 
 - `obsidian` — Vault SSOT operations (search, read, patch, append)
 - `context7` — Real-time library documentation
 - `maestro` — UI test automation (run tests, control simulator, screenshots, taps, debug flows)
-- `figma` — Design-to-code and code-to-design (official Figma MCP)
-- `talk-to-figma` — Direct Figma manipulation via WebSocket (create shapes, set colors, modify text, auto-layout)
-- `github` — GitHub API operations (repos, issues, PRs, code search)
+- `pencil` — Visual design in .pen files (wireframes, mockups, design systems)
+- `figma` — Design-to-code extraction and design reference
+- `talk-to-figma` — Direct WebSocket manipulation of Figma objects
+- `github` — PR, issue, code review operations
 
 > Obsidian MCP requires the Obsidian app to be running with Local REST API plugin enabled.
 > Context7 requires no configuration.
 > Maestro MCP requires Java 17+ and iOS Simulator or Android Emulator running.
+> Pencil MCP is available as an environment-level server.
 > Figma MCP requires Figma account authentication.
 > Talk-to-Figma MCP requires Figma Desktop + plugin installed + WebSocket server running.
 > GitHub MCP uses GitHub Copilot OAuth token.
+
+### Vault Structure
+
+The `obsidian-vault/` directory contains all project documentation and SSOT artifacts:
+
+- `Strategy/` — Strategic decisions, market research, positioning (owned by HoP)
+- `Product/` — PRDs, user research, feature specs (owned by HoP)
+- `Design/` — Service blueprints, user journeys, wireframes, personas, component specs (owned by Designer + UXE)
+- `Tech Specs/` — Architecture decisions, API specs, Known Errors Log (owned by HoE)
+- `Backlog/` — User stories with acceptance criteria (owned by UXE, updated by Developer + FE Developer)
+- `Research/` — Deep research reports, competitive analysis (owned by Deep Research skill)
+- `Decision Log/` — ADRs, design decisions, trade-off analyses (owned by HoE + HoP)
 
 ---
 

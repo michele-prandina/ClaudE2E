@@ -1,0 +1,200 @@
+---
+name: agent-stories
+description: >
+  Write user stories optimized for AI coding agents. Use this skill when writing
+  backlog stories that will be implemented by Developer or Frontend Developer agents.
+  Produces structured, XML-tagged specifications with explicit context, states matrix,
+  file paths, and escalation criteria. Based on research from SWE-bench, MetaGPT,
+  and practitioner evidence from Claude Code, Cursor, and Devin communities.
+---
+
+# Agent-Optimized User Story Skill
+
+<system>
+You are writing user stories that will be consumed by AI coding agents (Developer, Frontend Developer), not human developers. AI agents need explicit context that humans infer from institutional knowledge. The goal is first-pass implementation success — the implementing agent's output should require only code review, not rewriting.
+</system>
+
+## When to Use
+
+Use this skill when:
+- Writing backlog stories during Phase 5 (Backlog)
+- Breaking down features into implementable units
+- The implementing agent is Developer or FE Developer
+
+## Key Principles
+
+### The "First Day at Work" Mental Model
+
+Write every story as if the implementing agent is a senior developer on their first day at your company. They're skilled, but they don't know:
+- Where files are located
+- What patterns the codebase uses
+- What types and interfaces exist
+- What the UI looks like
+
+This mental model, independently adopted by Anthropic (Claude Code), Cognition (Devin), and Cursor communities, is the most effective way to think about agent-optimized specifications.
+
+### Specification Granularity
+
+The sweet spot for AI agent tasks is **300-800 tokens** per story, touching **1-5 files**, roughly equivalent to 1-4 hours of senior developer work. This is based on SWE-bench research showing that smaller, well-scoped tasks have dramatically higher first-pass success rates.
+
+If a story requires more than 2-3 architectural decisions, **split it**. AI agents handle focused implementation better than broad architectural work.
+
+### Context Is King
+
+80% of specification failures come from three missing context types:
+1. **File paths** — agent modifies wrong files
+2. **Pattern references** — agent uses different patterns than the codebase
+3. **Type definitions** — agent hallucinates APIs
+
+These three MUST be in every story. No exceptions.
+
+## Story Format
+
+```xml
+<story id="S{XX}" title="{Concise Feature Title}">
+
+<intent>
+{One sentence: what the user gets and why it matters}
+</intent>
+
+<context>
+Files to Modify:
+- {path/to/file.ts} -- {what to change and why}
+- {path/to/component.tsx} -- {what to create or modify}
+
+Files to Reference (read but do NOT modify):
+- {path/to/pattern.ts} -- {follow this pattern for consistency}
+- {path/to/types.ts} -- {use these type definitions}
+
+Dependencies:
+- Story S{YY} must be complete (provides {specific thing it provides})
+
+Key Types:
+```typescript
+// Include critical interfaces inline if short
+interface ExampleProps {
+  variant: 'primary' | 'secondary';
+  onPress: () => void;
+}
+```
+Or reference: "See types in {path/to/types.ts}:ExampleProps"
+</context>
+
+<requirements>
+Functional:
+1. {Verb-first testable requirement}
+2. {Verb-first testable requirement}
+3. {Verb-first testable requirement}
+
+Non-Functional:
+- {Performance, accessibility, i18n requirements}
+
+States:
+| State | Condition | Behavior |
+|-------|-----------|----------|
+| Loading | Data fetch in progress | Show skeleton screen matching component layout |
+| Loaded | Data received successfully | Render content with data |
+| Empty | Data received but array is empty | Show empty state with {specific message/action} |
+| Error | Network or server error | Show error banner with retry button |
+| Offline | No network connection | Show cached data if available, else offline message |
+
+Layout:
+{Component-first specification using EXISTING component names from the design system}
+{Reference design spec: obsidian-vault/Design/Component Specs/{component}.md}
+</requirements>
+
+<acceptance_criteria>
+- [ ] {Testable assertion mapping to functional requirement 1}
+- [ ] {Testable assertion mapping to functional requirement 2}
+- [ ] {Testable assertion for loading state}
+- [ ] {Testable assertion for empty state}
+- [ ] {Testable assertion for error state}
+- [ ] Accessibility: VoiceOver labels on all interactive elements
+- [ ] Accessibility: Touch targets minimum 44x44pt
+- [ ] TypeCheck passes: {typecheck command}
+- [ ] Lint passes: {lint command}
+- [ ] Tests pass: {test command}
+</acceptance_criteria>
+
+<tests>
+- Unit: {Behavioral description of what to test, not test code}
+- Integration: {Behavioral description of component interactions}
+- E2E: {Behavioral description of user journey to verify}
+</tests>
+
+<constraints>
+- Do NOT modify files outside the "Files to Modify" list
+- Do NOT add features not listed in Functional requirements
+- Do NOT change existing component APIs without escalation
+- Performance: {specific budget if applicable, e.g., "< 100ms render time"}
+- Follow patterns in {reference file} for {specific pattern}
+</constraints>
+
+<escalation>
+- If a required type/interface doesn't exist -> create it in {path} following {pattern}
+- If a required component doesn't exist -> escalate to UXE
+- If architectural uncertainty -> escalate to HoE
+- If scope unclear -> escalate to HoP
+</escalation>
+
+</story>
+```
+
+## Why This Format
+
+| Element | Why It's There | What Breaks Without It |
+|---------|---------------|----------------------|
+| XML tags | Unambiguous section boundaries for AI parsing | Agent misinterprets where context ends and requirements begin |
+| Intent (1 sentence) | Grounds the agent in user value | Agent over-engineers or misses the point |
+| Files to Modify vs Reference | Prevents accidental changes to wrong files | Agent modifies shared types or unrelated components |
+| States matrix | Catches loading/error/empty states | Agent implements happy path only (most common failure) |
+| Acceptance criteria as checkboxes | Testable assertions the agent can verify | Agent marks task "done" without verification |
+| Tests as behavioral descriptions | Agent writes framework-appropriate tests | Either no tests or copy-pasted test skeletons |
+| Constraints (what NOT to do) | Prevents scope creep | Agent adds unrequested features or refactors |
+| Escalation criteria | Decision rules instead of guessing | Agent hallucinates solutions or silently fails |
+
+## Anti-Patterns
+
+| Anti-Pattern | Why It Fails | Do This Instead |
+|---|---|---|
+| "As a user, I want..." only | Missing all context AI agents need | Use full XML format above |
+| Copy-pasting Figma screenshots | Agent cannot parse visual specs | Component-first layout specification |
+| "Make it look like the design" | Agent doesn't have the design | Describe layout with CSS vocabulary + component names |
+| 2000+ token stories | Diminishing returns; over-constrains | Keep to 300-800 tokens; split if needed |
+| Omitting file paths | Agent modifies wrong files | Always include Files to Modify and Reference |
+| No negative requirements | Agent adds unrequested features | Include "Do NOT" constraints |
+| Multiple features in one story | Agent scope-creeps or misses one | One feature per story, one story per PR |
+| Skipping states matrix | Agent implements happy path only | ALWAYS include loading, error, empty states |
+| Full test code in story | Over-constrains implementation | Behavioral test descriptions only |
+
+## Story Sizing Guide
+
+| Size | Token Range | Files | Duration | Example |
+|------|-------------|-------|----------|---------|
+| S | 300-400 | 1-2 | < 1hr | Add loading state to existing component |
+| M | 400-600 | 2-4 | 1-2hr | New component with variants and states |
+| L | 600-800 | 3-5 | 2-4hr | Feature with API integration + UI + tests |
+| XL (split!) | 800+ | 5+ | 4hr+ | MUST be split into S/M/L stories |
+
+## Checklist Before Submitting a Story
+
+- [ ] Intent is one sentence
+- [ ] All file paths are real and verified (use Glob to check)
+- [ ] States matrix covers: loading, loaded, empty, error (minimum)
+- [ ] Acceptance criteria are testable assertions (not vague descriptions)
+- [ ] Constraints include at least one "Do NOT" boundary
+- [ ] Escalation criteria defined for uncertainty
+- [ ] Story is 300-800 tokens (if larger, split)
+- [ ] Tests are behavioral descriptions, not code
+- [ ] HoP has approved scope
+- [ ] HoE has approved technical approach
+
+## Sources
+
+Based on research compiled in obsidian-vault/Research/Agent-Optimized-User-Stories-Research.md, drawing from:
+- SWE-bench task granularity research (Jimenez et al., 2023)
+- MetaGPT multi-agent framework (Hong et al., 2023)
+- Anthropic Claude Code documentation and CLAUDE.md patterns
+- Cognition Devin specification guides
+- Cursor community best practices
+- Practitioner evidence from production AI coding teams (2024-2025)

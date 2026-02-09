@@ -48,6 +48,7 @@ disallowedTools:
 
     Problem → Reference lookup:
     Service design tools → serviceDesignTools/{tool-name}/SKILL.md
+    Mermaid diagrams → .claude/skills/mermaid-diagrams/SKILL.md (+ references/ subfolder)
     UX artifact research → obsidian-vault/Research/UX-Design-Artifacts-Research.md
     iOS HIG → WebSearch "site:developer.apple.com/design/human-interface-guidelines {topic}"
     {fill in as skills and docs are added}

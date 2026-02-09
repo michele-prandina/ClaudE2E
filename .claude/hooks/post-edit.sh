@@ -47,6 +47,15 @@ if echo "$REL_PATH" | grep -q "^obsidian-vault/"; then
         fi
     fi
 
+    # Design/ → designer, uxe, or orchestrator only
+    if echo "$VAULT_REL" | grep -q "^Design/"; then
+        if [ "$AGENT" != "designer" ] && [ "$AGENT" != "uxe" ] && [ "$AGENT" != "orchestrator" ]; then
+            echo "BLOCKED: Only designer or uxe can edit Design/"
+            echo "Current agent: $AGENT"
+            exit 2
+        fi
+    fi
+
     # Tech Specs/ → head-of-engineering only (except Known Errors/)
     if echo "$VAULT_REL" | grep -q "^Tech Specs/"; then
         # Exception: Known Errors/ is writable by developer
@@ -75,10 +84,10 @@ if echo "$REL_PATH" | grep -q "^obsidian-vault/"; then
         fi
     fi
 
-    # Backlog/ → head-of-product, head-of-engineering, developer
+    # Backlog/ → uxe, head-of-product, head-of-engineering, developer
     if echo "$VAULT_REL" | grep -q "^Backlog/"; then
-        if [ "$AGENT" != "head-of-product" ] && [ "$AGENT" != "head-of-engineering" ] && [ "$AGENT" != "developer" ] && [ "$AGENT" != "orchestrator" ]; then
-            echo "BLOCKED: Only head-of-product, head-of-engineering, or developer can edit Backlog/"
+        if [ "$AGENT" != "uxe" ] && [ "$AGENT" != "head-of-product" ] && [ "$AGENT" != "head-of-engineering" ] && [ "$AGENT" != "developer" ] && [ "$AGENT" != "orchestrator" ]; then
+            echo "BLOCKED: Only uxe, head-of-product, head-of-engineering, or developer can edit Backlog/"
             echo "Current agent: $AGENT"
             exit 2
         fi
@@ -110,7 +119,7 @@ if '**Phase**' not in content:
     errors.append('Missing Phase field')
 else:
     # Validate Phase value
-    valid_phases = ['Discovery', 'Strategy', 'Product Spec', 'Architecture', 'Backlog', 'Implementation', 'Integration']
+    valid_phases = ['Setup', 'Research & Discovery', 'Strategy', 'Product Spec', 'Architecture', 'Backlog', 'Implementation', 'Integration', '{current phase}']
     found_phase = False
     for line in content.split('\n'):
         if '**Phase**' in line:

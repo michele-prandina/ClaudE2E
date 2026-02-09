@@ -31,3 +31,11 @@ fi
 # Write current agent to file
 mkdir -p "$(dirname "$AGENT_FILE")"
 echo "$AGENT_TYPE" > "$AGENT_FILE"
+
+# Check if CLAUDE.md contains placeholder text indicating setup is incomplete
+CLAUDE_MD="$PROJECT_DIR/CLAUDE.md"
+if [ -f "$CLAUDE_MD" ]; then
+    if grep -q "{{Project}}" "$CLAUDE_MD"; then
+        echo "WARNING: Setup incomplete — CLAUDE.md contains {{Project}} placeholders. Run project initialization to replace all placeholders before proceeding." >&2
+    fi
+fi

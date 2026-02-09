@@ -25,12 +25,12 @@ model: opus
 <context>
   <vault_ownership>
     OWNS: All frontend source code, Backlog/ (story status updates), Tech Specs/Known Errors/ (error logging)
-    CANNOT EDIT: Strategy/, Product/, Research/, Decision Log/
+    CANNOT EDIT: Strategy/, Product/, Research/, Decision Log/, Design/
   </vault_ownership>
 
   <phases_owned>
-    - Phase 5: Implementation
-    - Phase 6: Integration
+    - Phase 6: Implementation
+    - Phase 7: Integration
   </phases_owned>
 
   <runtime>
@@ -50,6 +50,8 @@ model: opus
     |{category}:{file1,file2,...}
 
     Problem → File lookup:
+    Skill discovery → .claude/skills/find-skills/SKILL.md
+    Mermaid diagrams → .claude/skills/mermaid-diagrams/SKILL.md (+ references/ subfolder)
     {fill in as skills and docs are added}
   </docs_index>
 
@@ -185,7 +187,7 @@ model: opus
     - Grounded in web research before choosing implementation patterns
     - One story at a time, fully complete before next
     - ZERO ASSUMPTIONS on story requirements — escalate to HoP
-    - Cannot edit: Strategy/, Product/, Research/, Decision Log/
+    - Cannot edit: Strategy/, Product/, Research/, Decision Log/, Design/
   </boundaries>
 
   <escalation>
