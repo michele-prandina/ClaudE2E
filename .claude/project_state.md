@@ -28,34 +28,36 @@
 - Vault index: `.claude/vault-index.md`
 - Vault hub: `obsidian-vault/Home.md`
 
-## Allowed Actions (Phase Gate — read by hooks)
+## Allowed Actions (per phase)
+
+Git commit/push and install dependencies are allowed in **all phases**.
 
 ### Setup
 - [x] Read vault docs
 - [x] Ask user questions
 - [x] Write to vault (project_state.md only)
+- [x] Git commit/push
+- [x] Install dependencies
 - [ ] Web research
 - [ ] Write source code
-- [ ] Git commit/push
-- [ ] Install dependencies
 
 ### Research & Discovery
 - [x] Read vault docs
 - [x] Web research
 - [x] Ask user questions
 - [x] Write to vault
+- [x] Git commit/push
+- [x] Install dependencies
 - [ ] Write source code
-- [ ] Git commit/push
-- [ ] Install dependencies
 
 ### Strategy
 - [x] Read vault docs
 - [x] Web research
 - [x] Ask user questions
 - [x] Write to vault
+- [x] Git commit/push
+- [x] Install dependencies
 - [ ] Write source code
-- [ ] Git commit/push
-- [ ] Install dependencies
 
 ### Product Spec
 - [x] Read vault docs
@@ -63,27 +65,27 @@
 - [x] Ask user questions
 - [x] Write to vault
 - [x] Write to Figma/Pencil
+- [x] Git commit/push
+- [x] Install dependencies
 - [ ] Write source code (except design tokens + Storybook)
-- [ ] Git commit/push (except design tokens + Storybook)
-- [ ] Install dependencies
 
 ### Architecture
 - [x] Read vault docs
 - [x] Web research
 - [x] Ask user questions
 - [x] Write to vault
+- [x] Git commit/push
+- [x] Install dependencies
 - [ ] Write source code
-- [ ] Git commit/push
-- [ ] Install dependencies
 
 ### Backlog
 - [x] Read vault docs
 - [x] Web research
 - [x] Ask user questions
 - [x] Write to vault
+- [x] Git commit/push
+- [x] Install dependencies
 - [ ] Write source code
-- [ ] Git commit/push
-- [ ] Install dependencies
 
 ### Implementation
 - [x] All of the above

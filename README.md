@@ -30,7 +30,7 @@ All three share the same Obsidian vault, protocols, and project lifecycle. The a
 | `.claude/agents/` | 6 agents for Claude Code |
 | `.claude/skills/` | Skills: Deep Research, Agent Stories, Mermaid Diagrams, Find Skills, Maestro |
 | `.claude/protocols/` | Shared protocols: vault-sync, error-logging |
-| `.claude/hooks/` | Hard enforcement: phase gating, commit format, vault ownership |
+| `.claude/hooks/` | Hard enforcement: commit format, vault ownership |
 | `.claude/scripts/` | Vault maintenance: rebuild index, audit wikilinks |
 | `.cursor/rules/` | Cursor-native rules: agents as personas, skills as rules |
 | `.agent/rules/` | Antigravity-native rules and agent personas |
@@ -161,7 +161,7 @@ UX Engineer writes agent-optimized user stories with acceptance criteria, inform
 
 #### Phase 6 -- Implementation (Developer + FE Developer)
 
-This is where code gets written. Source code and git operations are **blocked in all prior phases** by the `pre-bash.sh` hook. Developer picks up backend stories; Frontend Developer picks up UI stories. Each story follows a cycle:
+This is where source code gets written. Developer picks up backend stories; Frontend Developer picks up UI stories. Git operations (commit, push) are available in all phases, but source code authoring happens here. Each story follows a cycle:
 
 ```
 Pick story ──▸ Implement ──▸ Run tests ──▸ Commit (feat(SXX): ...) ──▸ Next story
@@ -200,7 +200,7 @@ Shell hooks enforce the rules structurally -- agents cannot bypass them:
 
 | Hook | What it enforces |
 |------|-----------------|
-| `pre-bash.sh` | Blocks code/git operations until Phase 6 (Implementation); enforces conventional commit format |
+| `pre-bash.sh` | Enforces conventional commit message format |
 | `post-edit.sh` | Blocks agents from editing vault folders they don't own; validates `project_state.md` |
 | `session-start.sh` | Tracks which agent is active; warns if `{{Project}}` placeholders remain |
 
@@ -320,7 +320,7 @@ This boilerplate enforces an 8-phase lifecycle via hooks:
 | 6 | Implementation | Developer + FE Developer | Tests pass per story |
 | 7 | Integration | Developer + FE Developer + HoE | User approves release |
 
-Source code and git operations are **blocked** until Phase 6 (Implementation). This is enforced by the `pre-bash.sh` hook.
+Git operations (commit, push) are allowed in all phases. Source code authoring begins in Phase 6 (Implementation).
 
 Phases 4 and 5 can run in parallel — Architecture and Backlog are independent work streams.
 
@@ -378,7 +378,7 @@ Enforced by the `post-edit.sh` hook:
 
 ### Changing phases
 
-Edit `.claude/project_state.md` — the Phase field is read by hooks to gate actions.
+Edit `.claude/project_state.md` — the Phase field tracks the current project phase.
 Valid phases: Setup, Research & Discovery, Strategy, Product Spec, Architecture, Backlog, Implementation, Integration.
 
 ### Removing optional MCP servers
@@ -416,7 +416,7 @@ ls -la .claude/hooks/
 |-------|----------|
 | Hook blocked unexpectedly | Check `.claude/.current-agent` — it may be stale. Delete it and restart session. |
 | "No API key found" from audit script | Ensure Obsidian is running with Local REST API enabled. Set `OBSIDIAN_API_KEY` env var. |
-| Phase gating too restrictive during setup | Temporarily set Phase to "Implementation" in `project_state.md`, then reset when done. |
+| Phase field not set | Set the Phase in `project_state.md` to your current project phase. |
 | Hooks not triggering | Verify `settings.json` is in `.claude/` (not `.claude/settings/`). Check `chmod +x` on `.sh` files. |
 | Agent can't edit a file it should own | Check `post-edit.sh` — the orchestrator is always allowed. Run as default session to bypass. |
 | Python not found in hooks | Hooks use `python3`. Ensure it's in your PATH. |
