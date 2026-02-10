@@ -48,44 +48,35 @@ This boilerplate gives you a team of 6 AI agents that collaborate through an Obs
 
 ### Orchestration Model
 
-```mermaid
-flowchart TD
-    User([User]) --> Orch["Orchestrator<br/>(CLAUDE.md)"]
-
-    Orch -->|"/hop, planning, UX"| HoP["Head of Product"]
-    Orch -->|"/hoe, architecture"| HoE["Head of Engineering"]
-    Orch -->|"/design, visuals"| Des["Designer"]
-    Orch -->|"/uxe, design system"| UXE["UX Engineer"]
-    Orch -->|"/dev, backend story"| Dev["Developer"]
-    Orch -->|"/dev-fe, frontend story"| FE["Frontend Developer"]
-    Orch -->|"/deep-research"| DR["Deep Research<br/>(Skill)"]
-
-    HoP -->|"spawns teams"| Des
-    HoP -->|"spawns teams"| UXE
-    HoE -->|"spawns teams"| Dev
-    HoE -->|"spawns teams"| FE
-    HoE -->|"spawns teams"| UXE
-
-    HoP -.->|"Tier 2 escalation"| HoE
-    HoE -.->|"Tier 2 escalation"| HoP
-    HoP -.->|"Tier 3 escalation"| User
-    HoE -.->|"Tier 3 escalation"| User
-
-    subgraph SSOT["Obsidian Vault (SSOT)"]
-        Strat["Strategy/"]
-        Prod["Product/"]
-        Design["Design/"]
-        Tech["Tech Specs/"]
-        BL["Backlog/"]
-        Res["Research/"]
-    end
-
-    HoP -->|"owns"| Strat
-    HoP -->|"owns"| Prod
-    HoE -->|"owns"| Tech
-    Des -->|"owns"| Design
-    UXE -->|"owns"| BL
-    DR -->|"owns"| Res
+```
+                                ┌────────┐
+                                │  User  │
+                                └───┬────┘
+                                    │
+                       ┌────────────▼────────────┐
+                       │      Orchestrator       │
+                       │       (CLAUDE.md)       │
+                       └────────────┬────────────┘
+                                    │ routes by trigger
+        ┌──────────┬────────┬───────┼───────┬──────────┬──────────────┐
+        │          │        │       │       │          │              │
+        ▼          ▼        ▼       ▼       ▼          ▼              ▼
+     ┌──────┐  ┌──────┐  ┌─────┐ ┌─────┐ ┌─────┐  ┌──────┐  ┌─────────────┐
+     │ HoP  │  │ HoE  │  │ Des │ │ UXE │ │ Dev │  │  FE  │  │Deep Research│
+     └──┬───┘  └──┬───┘  └─────┘ └─────┘ └─────┘  └──────┘  └──────┬──────┘
+        │         │                                                  │
+        │  spawns ├────▶ Dev, FE, UXE                                │
+        ├────────▶│      Des, UXE                                    │
+        │         │                                                  │
+        │◄───────►│  Tier 2 escalation                               │
+        ├─────────┴───── Tier 3 ─────▶ User                          │
+        │         │                                                  │
+        │    owns │         owns           owns           owns       │
+        ▼         ▼           ▼              ▼              ▼        ▼
+     ┌──────────────────────────────────────────────────────────────────┐
+     │                     Obsidian Vault (SSOT)                       │
+     │  Strategy/  Product/  Design/  Tech Specs/  Backlog/  Research/ │
+     └──────────────────────────────────────────────────────────────────┘
 ```
 
 The Orchestrator never writes code or vault content itself. It reads the current phase from `project_state.md`, determines which agent should handle the request, spawns that agent with the mandatory context preamble, and enforces ownership rules via hooks.
@@ -107,32 +98,49 @@ The Orchestrator never writes code or vault content itself. It reads the current
 
 Each phase has designated agents, specific inputs and outputs, and a gate that must be cleared before the next phase begins. Deep Research runs **horizontally** before every phase transition to ground decisions in current best practices.
 
-```mermaid
-stateDiagram-v2
-    [*] --> Phase0
-    Phase0 --> Phase1 : Placeholders replaced
-    Phase1 --> Phase2 : User confirms understanding
-    Phase2 --> Phase3 : User approves strategy
-    Phase3 --> Phase4 : PRD + designs approved
-    Phase3 --> Phase5 : PRD + designs approved
-    Phase4 --> Phase6 : Architecture approved
-    Phase5 --> Phase6 : Stories approved
-    Phase6 --> Phase7 : All stories pass tests
-    Phase7 --> [*] : User approves release
-
-    state "Phase 0: Setup" as Phase0
-    state "Phase 1: Research & Discovery" as Phase1
-    state "Phase 2: Strategy" as Phase2
-    state "Phase 3: Product Spec" as Phase3
-    state "Phase 4: Architecture" as Phase4
-    state "Phase 5: Backlog" as Phase5
-    state "Phase 6: Implementation" as Phase6
-    state "Phase 7: Integration" as Phase7
-
-    note right of Phase3
-        Phases 4 and 5 can
-        run in parallel
-    end note
+```
+  [Start]
+     │
+     ▼
+┌─────────────────────────────┐
+│ Phase 0: Setup              │
+└──────────────┬──────────────┘
+               │ Placeholders replaced
+               ▼
+┌─────────────────────────────┐
+│ Phase 1: Research           │
+└──────────────┬──────────────┘
+               │ User confirms understanding
+               ▼
+┌─────────────────────────────┐
+│ Phase 2: Strategy           │
+└──────────────┬──────────────┘
+               │ User approves strategy
+               ▼
+┌─────────────────────────────┐
+│ Phase 3: Product Spec       │
+└───────┬─────────────┬───────┘
+        │             │  PRD + designs approved
+        ▼             ▼
+  (run in parallel)
+┌─────────────┐ ┌─────────────┐
+│  Phase 4:   │ │  Phase 5:   │
+│ Architecture│ │   Backlog   │
+└──────┬──────┘ └──────┬──────┘
+       │ approved      │ approved
+       └───────┬───────┘
+               ▼
+┌─────────────────────────────┐
+│ Phase 6: Implementation     │
+└──────────────┬──────────────┘
+               │ All stories pass tests
+               ▼
+┌─────────────────────────────┐
+│ Phase 7: Integration        │
+└──────────────┬──────────────┘
+               │ User approves release
+               ▼
+            [Done]
 ```
 
 #### Phase 0 -- Setup (Orchestrator)
