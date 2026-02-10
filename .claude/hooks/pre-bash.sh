@@ -1,12 +1,10 @@
 #!/usr/bin/env bash
 # Hook: PreToolUse (Bash)
-# Phase gating: blocks code operations outside Implementation/Integration
 # Commit format: enforces conventional commit messages
 
 set -euo pipefail
 
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-.}"
-STATE_FILE="$PROJECT_DIR/.claude/project_state.md"
 AGENT_FILE="$PROJECT_DIR/.claude/.current-agent"
 
 # Read JSON from stdin
@@ -24,86 +22,10 @@ except Exception:
     print('')
 " 2>/dev/null || echo "")
 
-# Read current phase from project_state.md
-PHASE=""
-if [ -f "$STATE_FILE" ]; then
-    PHASE=$(python3 -c "
-import sys
-with open('$STATE_FILE') as f:
-    for line in f:
-        if '**Phase**' in line:
-            # Extract value after last |
-            parts = line.strip().split('|')
-            if len(parts) >= 3:
-                print(parts[2].strip())
-            break
-" 2>/dev/null || echo "")
-fi
-
 # Read current agent
 AGENT=""
 if [ -f "$AGENT_FILE" ]; then
     AGENT=$(cat "$AGENT_FILE" 2>/dev/null || echo "")
-fi
-
-# --- PHASE GATING ---
-# Valid phases: Setup, Research & Discovery, Strategy, Product Spec, Architecture, Backlog, Implementation, Integration
-# Only allow code/git operations during Implementation or Integration
-if [ "$PHASE" != "Implementation" ] && [ "$PHASE" != "Integration" ]; then
-
-    # Check for blocked commands (code execution, git write operations)
-    IS_BLOCKED=$(echo "$COMMAND" | python3 -c "
-import sys, re
-cmd = sys.stdin.read().strip()
-
-# Always allowed regardless of phase
-always_allowed = [
-    r'^git\s+(status|log|diff|branch|show)',
-    r'^npx\s+skills',
-    r'^curl\s',
-    r'^wget\s',
-    r'^which\s',
-    r'^echo\s',
-    r'^cat\s',
-    r'^ls\b',
-    r'^pwd\b',
-    r'^head\s',
-    r'^tail\s',
-]
-
-for pattern in always_allowed:
-    if re.match(pattern, cmd):
-        print('allowed')
-        sys.exit(0)
-
-# Blocked during non-implementation phases
-blocked = [
-    r'^python',
-    r'^node\b',
-    r'^npm\s+(install|run|start|build|test)',
-    r'^yarn\b',
-    r'^pnpm\b',
-    r'^pip\b',
-    r'^cargo\b',
-    r'^go\s+(build|run|test)',
-    r'^make\b',
-    r'^docker\b',
-]
-
-for pattern in blocked:
-    if re.match(pattern, cmd):
-        print('blocked')
-        sys.exit(0)
-
-print('allowed')
-" 2>/dev/null || echo "allowed")
-
-    if [ "$IS_BLOCKED" = "blocked" ]; then
-        echo "BLOCKED: Code operations are only allowed during Implementation or Integration phase."
-        echo "Current phase: $PHASE"
-        echo "Update .claude/project_state.md to change phase."
-        exit 2
-    fi
 fi
 
 # --- COMMIT FORMAT ENFORCEMENT ---

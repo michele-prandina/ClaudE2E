@@ -31,7 +31,7 @@ All four share the same Obsidian vault, protocols, and project lifecycle. The ag
 | `.claude/agents/` | 6 agents for Claude Code |
 | `.claude/skills/` | Skills: Deep Research, Agent Stories, Mermaid Diagrams, Find Skills, Maestro |
 | `.claude/protocols/` | Shared protocols: vault-sync, error-logging |
-| `.claude/hooks/` | Hard enforcement: phase gating (code ops), commit format, vault ownership |
+| `.claude/hooks/` | Hard enforcement: commit format, vault ownership |
 | `.claude/scripts/` | Vault maintenance: rebuild index, audit wikilinks |
 | `.cursor/rules/` | Cursor-native rules: agents as personas, skills as rules |
 | `.agent/rules/` | Antigravity-native rules and agent personas |
@@ -44,7 +44,51 @@ All four share the same Obsidian vault, protocols, and project lifecycle. The ag
 
 ## How It Works
 
-This boilerplate gives you a team of 6 AI agents that collaborate through an Obsidian vault (the single source of truth). Each agent has a defined role, owns specific vault folders, and is structurally prevented from overstepping via shell hooks.
+This boilerplate gives you a team of 6 AI agents that collaborate through an Obsidian vault (the single source of truth). Each agent has a defined role, owns specific vault folders, and is structurally prevented from overstepping via shell hooks. The **Orchestrator** (`CLAUDE.md`) sits at the center, routing every user request to the right agent and enforcing the lifecycle.
+
+### Orchestration Model
+
+```mermaid
+flowchart TD
+    User([User]) --> Orch["Orchestrator<br/>(CLAUDE.md)"]
+
+    Orch -->|"/hop, planning, UX"| HoP["Head of Product"]
+    Orch -->|"/hoe, architecture"| HoE["Head of Engineering"]
+    Orch -->|"/design, visuals"| Des["Designer"]
+    Orch -->|"/uxe, design system"| UXE["UX Engineer"]
+    Orch -->|"/dev, backend story"| Dev["Developer"]
+    Orch -->|"/dev-fe, frontend story"| FE["Frontend Developer"]
+    Orch -->|"/deep-research"| DR["Deep Research<br/>(Skill)"]
+
+    HoP -->|"spawns teams"| Des
+    HoP -->|"spawns teams"| UXE
+    HoE -->|"spawns teams"| Dev
+    HoE -->|"spawns teams"| FE
+    HoE -->|"spawns teams"| UXE
+
+    HoP -.->|"Tier 2 escalation"| HoE
+    HoE -.->|"Tier 2 escalation"| HoP
+    HoP -.->|"Tier 3 escalation"| User
+    HoE -.->|"Tier 3 escalation"| User
+
+    subgraph SSOT["Obsidian Vault (SSOT)"]
+        Strat["Strategy/"]
+        Prod["Product/"]
+        Design["Design/"]
+        Tech["Tech Specs/"]
+        BL["Backlog/"]
+        Res["Research/"]
+    end
+
+    HoP -->|"owns"| Strat
+    HoP -->|"owns"| Prod
+    HoE -->|"owns"| Tech
+    Des -->|"owns"| Design
+    UXE -->|"owns"| BL
+    DR -->|"owns"| Res
+```
+
+The Orchestrator never writes code or vault content itself. It reads the current phase from `project_state.md`, determines which agent should handle the request, spawns that agent with the mandatory context preamble, and enforces ownership rules via hooks.
 
 ### The Agents
 
@@ -59,6 +103,90 @@ This boilerplate gives you a team of 6 AI agents that collaborate through an Obs
 
 **Agent Teams:** Head of Engineering can spawn teams of Developers, Frontend Developers, and UX Engineers for parallel work. Head of Product can spawn teams of Designers and UX Engineers. This requires the `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` environment variable (pre-configured in settings.json).
 
+### How Agents Execute the Phases
+
+Each phase has designated agents, specific inputs and outputs, and a gate that must be cleared before the next phase begins. Deep Research runs **horizontally** before every phase transition to ground decisions in current best practices.
+
+```mermaid
+stateDiagram-v2
+    [*] --> Phase0
+    Phase0 --> Phase1 : Placeholders replaced
+    Phase1 --> Phase2 : User confirms understanding
+    Phase2 --> Phase3 : User approves strategy
+    Phase3 --> Phase4 : PRD + designs approved
+    Phase3 --> Phase5 : PRD + designs approved
+    Phase4 --> Phase6 : Architecture approved
+    Phase5 --> Phase6 : Stories approved
+    Phase6 --> Phase7 : All stories pass tests
+    Phase7 --> [*] : User approves release
+
+    state "Phase 0: Setup" as Phase0
+    state "Phase 1: Research & Discovery" as Phase1
+    state "Phase 2: Strategy" as Phase2
+    state "Phase 3: Product Spec" as Phase3
+    state "Phase 4: Architecture" as Phase4
+    state "Phase 5: Backlog" as Phase5
+    state "Phase 6: Implementation" as Phase6
+    state "Phase 7: Integration" as Phase7
+
+    note right of Phase3
+        Phases 4 and 5 can
+        run in parallel
+    end note
+```
+
+#### Phase 0 -- Setup (Orchestrator)
+
+The Orchestrator walks the user through initialization: project name, platform, design tone, tech stack, MCP configuration. All `{{Project}}` placeholders must be replaced before any other work begins. This is the only **blocking** phase.
+
+#### Phase 1 -- Research & Discovery (HoP + Deep Research)
+
+Head of Product defines the problem space. Deep Research runs parallel retrieval agents to gather market data, competitor analysis, and user needs. Outputs land in `Research/` and `Strategy/` vault folders. Gate: user confirms understanding of the space.
+
+#### Phase 2 -- Strategy (HoP)
+
+Head of Product synthesizes research into strategic direction: target users, value proposition, positioning, success metrics. Outputs a strategy document in `Strategy/`. Gate: user approves strategic direction.
+
+#### Phase 3 -- Product Spec (HoP + Designer + UXE)
+
+Three agents collaborate. HoP writes the PRD in `Product/`. Designer creates service blueprints, user journeys, wireframes, and visual designs in `Design/`. UXE translates designs into component specs, design tokens, and Storybook stories. Gate: visual designs, Storybook, and PRD all approved.
+
+```
+HoP ──writes PRD──▸ Designer ──creates designs──▸ UXE ──specs components──▸ Gate
+```
+
+#### Phase 4 -- Architecture (HoE) | runs in parallel with Phase 5
+
+Head of Engineering defines the technical architecture: system design, API contracts, data models, infrastructure, ADRs. Outputs go to `Tech Specs/` and `Decision Log/`. Gate: user approves architecture.
+
+#### Phase 5 -- Backlog (UXE, informed by HoP + HoE) | runs in parallel with Phase 4
+
+UX Engineer writes agent-optimized user stories with acceptance criteria, informed by the PRD (HoP) and tech constraints (HoE). Stories are placed in `Backlog/Stories/`. Gate: user approves the story set.
+
+#### Phase 6 -- Implementation (Developer + FE Developer)
+
+This is where source code gets written. Developer picks up backend stories; Frontend Developer picks up UI stories. Git operations (commit, push) are available in all phases, but source code authoring happens here. Each story follows a cycle:
+
+```
+Pick story ──▸ Implement ──▸ Run tests ──▸ Commit (feat(SXX): ...) ──▸ Next story
+```
+
+HoE can spawn **agent teams** for parallel implementation of independent stories.
+
+#### Phase 7 -- Integration (Developer + FE Developer + HoE)
+
+All stories are integrated, end-to-end tests run, and HoE reviews the final system. Gate: user approves the release.
+
+### Escalation Model
+
+Agents do not operate in isolation. A 3-tier escalation model governs how decisions flow:
+
+| Tier | What happens | Examples |
+|------|-------------|----------|
+| **Tier 1 -- Auto-resolve** | Agent handles silently | Commit, lint, format, run tests, update vault, branch management |
+| **Tier 2 -- Escalate to executive** | Route to HoP or HoE | Ambiguous spec -> HoP; multiple tech approaches -> HoE; code error after 2 attempts -> HoE |
+| **Tier 3 -- Escalate to user** | Ask the human | Strategic changes, architecture pivots, assumptions, conflicting recommendations, spending money |
+
 ### Skills
 
 | Skill | Trigger | Description |
@@ -70,20 +198,15 @@ This boilerplate gives you a team of 6 AI agents that collaborate through an Obs
 | Maestro | `/maestro` | Create and run Maestro UI test flows |
 | Dynamic Skills | `npx skills find [keywords]` | All agents can discover and install skills from skills.sh |
 
-### The Workflow
-
-1. Start in **Setup** (Phase 0) — fill in all placeholders and configure the workspace
-2. Progress through **Research & Discovery** > **Strategy** > **Product Spec** > **Architecture** > **Backlog**
-3. Only in **Implementation** (Phase 6) can anyone write source code
-4. Each phase transition requires your explicit approval
-5. Deep Research runs horizontally before every phase transition
-6. User can jump between phases (system warns but doesn't block)
-
 ### The Enforcement
 
-- `pre-bash.sh` — blocks code operations (not git) until Implementation phase; enforces conventional commit format
-- `post-edit.sh` — blocks agents from editing vault folders they don't own; validates project_state.md
-- `session-start.sh` — tracks which agent is active; warns if `{{Project}}` placeholders remain
+Shell hooks enforce the rules structurally -- agents cannot bypass them:
+
+| Hook | What it enforces |
+|------|-----------------|
+| `pre-bash.sh` | Enforces conventional commit message format |
+| `post-edit.sh` | Blocks agents from editing vault folders they don't own; validates `project_state.md` |
+| `session-start.sh` | Tracks which agent is active; warns if `{{Project}}` placeholders remain |
 
 ## Vault Structure
 
@@ -201,7 +324,7 @@ This boilerplate enforces an 8-phase lifecycle via hooks:
 | 6 | Implementation | Developer + FE Developer | Tests pass per story |
 | 7 | Integration | Developer + FE Developer + HoE | User approves release |
 
-Source code operations are **blocked** until Phase 6 (Implementation). This is enforced by the `pre-bash.sh` hook. Git commands are allowed in all phases.
+Git operations (commit, push) are allowed in all phases. Source code authoring begins in Phase 6 (Implementation).
 
 Phases 4 and 5 can run in parallel — Architecture and Backlog are independent work streams.
 
@@ -263,7 +386,7 @@ Enforced by the `post-edit.sh` hook:
 
 ### Changing phases
 
-Edit `.claude/project_state.md` — the Phase field is read by hooks to gate actions.
+Edit `.claude/project_state.md` — the Phase field tracks the current project phase.
 Valid phases: Setup, Research & Discovery, Strategy, Product Spec, Architecture, Backlog, Implementation, Integration.
 
 ### Removing optional MCP servers
@@ -308,7 +431,7 @@ ls -la .claude/hooks/
 |-------|----------|
 | Hook blocked unexpectedly | Check `.claude/.current-agent` — it may be stale. Delete it and restart session. |
 | "No API key found" from audit script | Ensure Obsidian is running with Local REST API enabled. Set `OBSIDIAN_API_KEY` env var. |
-| Phase gating too restrictive during setup | Temporarily set Phase to "Implementation" in `project_state.md`, then reset when done. Git commands are always allowed. |
+| Phase field not set | Set the Phase in `project_state.md` to your current project phase. |
 | Hooks not triggering | Verify `settings.json` is in `.claude/` (not `.claude/settings/`). Check `chmod +x` on `.sh` files. |
 | Agent can't edit a file it should own | Check `post-edit.sh` — the orchestrator is always allowed. Run as default session to bypass. |
 | Python not found in hooks | Hooks use `python3`. Ensure it's in your PATH. |
