@@ -1,6 +1,6 @@
 # Claude Code E2E Boilerplate
 
-A reusable multi-agent AI development boilerplate with 6 specialized agents, an Obsidian vault SSOT, 7 MCP servers, agent teams support, and an 8-phase project lifecycle with hard-enforced rules via hooks. Cross-IDE compatible with Claude Code, Cursor, and Google Antigravity.
+A reusable multi-agent AI development boilerplate with 6 specialized agents, an Obsidian vault SSOT, 7 MCP servers, agent teams support, and an 8-phase project lifecycle with hard-enforced rules via hooks. Cross-IDE compatible with Claude Code, Cursor, Google Antigravity, and OpenCode.
 
 ## Quick Start
 
@@ -11,15 +11,16 @@ A reusable multi-agent AI development boilerplate with 6 specialized agents, an 
 
 ## IDE Support
 
-This boilerplate ships with native configuration for three AI-powered IDEs:
+This boilerplate ships with native configuration for four AI-powered IDEs:
 
 | IDE | Config Folder | Format | Status |
 |-----|---------------|--------|--------|
 | **Claude Code** | `.claude/` | Agents (`.md`), Skills (`SKILL.md`), Hooks (`.sh`) | Primary |
 | **Cursor** | `.cursor/rules/` | Rules (`.mdc` with YAML frontmatter) | Ported |
 | **Google Antigravity** | `.agent/` | Rules (`.md`), Skills (`SKILL.md`), Workflows (`.md`) | Ported |
+| **OpenCode** | `.opencode/` + `opencode.json` | Agents (`.md` with YAML frontmatter), `AGENTS.md` rules | Ported |
 
-All three share the same Obsidian vault, protocols, and project lifecycle. The agent definitions and skills are adapted to each IDE's native format.
+All four share the same Obsidian vault, protocols, and project lifecycle. The agent definitions and skills are adapted to each IDE's native format.
 
 ## What's Included
 
@@ -30,12 +31,15 @@ All three share the same Obsidian vault, protocols, and project lifecycle. The a
 | `.claude/agents/` | 6 agents for Claude Code |
 | `.claude/skills/` | Skills: Deep Research, Agent Stories, Mermaid Diagrams, Find Skills, Maestro |
 | `.claude/protocols/` | Shared protocols: vault-sync, error-logging |
-| `.claude/hooks/` | Hard enforcement: phase gating, commit format, vault ownership |
+| `.claude/hooks/` | Hard enforcement: phase gating (code ops), commit format, vault ownership |
 | `.claude/scripts/` | Vault maintenance: rebuild index, audit wikilinks |
 | `.cursor/rules/` | Cursor-native rules: agents as personas, skills as rules |
 | `.agent/rules/` | Antigravity-native rules and agent personas |
 | `.agent/skills/` | Skills in Antigravity format (same SKILL.md structure) |
 | `.agent/workflows/` | Antigravity workflows triggered via `/commands` |
+| `.opencode/agents/` | OpenCode-native agents with YAML frontmatter (mode, tools, permissions) |
+| `.opencode/protocols/` | OpenCode-native protocols |
+| `opencode.json` | OpenCode config: MCP servers, instructions, model settings |
 | `obsidian-vault/` | Obsidian vault — SSOT with research notes, sources, and project docs |
 
 ## How It Works
@@ -70,14 +74,14 @@ This boilerplate gives you a team of 6 AI agents that collaborate through an Obs
 
 1. Start in **Setup** (Phase 0) — fill in all placeholders and configure the workspace
 2. Progress through **Research & Discovery** > **Strategy** > **Product Spec** > **Architecture** > **Backlog**
-3. Only in **Implementation** (Phase 6) can anyone write code or commit
+3. Only in **Implementation** (Phase 6) can anyone write source code
 4. Each phase transition requires your explicit approval
 5. Deep Research runs horizontally before every phase transition
 6. User can jump between phases (system warns but doesn't block)
 
 ### The Enforcement
 
-- `pre-bash.sh` — blocks code/git operations until Implementation phase; enforces conventional commit format
+- `pre-bash.sh` — blocks code operations (not git) until Implementation phase; enforces conventional commit format
 - `post-edit.sh` — blocks agents from editing vault folders they don't own; validates project_state.md
 - `session-start.sh` — tracks which agent is active; warns if `{{Project}}` placeholders remain
 
@@ -114,7 +118,7 @@ Synthesized vault notes link to their raw sources via `[[wikilinks]]` in `## Sou
 ## Prerequisites
 
 - Node.js 18+
-- [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code), [Cursor](https://cursor.com), or [Google Antigravity](https://antigravity.google/) installed
+- [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code), [Cursor](https://cursor.com), [Google Antigravity](https://antigravity.google/), or [OpenCode](https://opencode.ai/) installed
 - [Obsidian](https://obsidian.md/) app installed
 - Java 17+ (for Maestro UI testing, optional)
 - iOS Simulator or Android Emulator (for Maestro, optional)
@@ -150,7 +154,7 @@ Point your Obsidian vault to the `obsidian-vault/` directory in your project roo
 
 ### 5. Configure MCP servers
 
-Update `.mcp.json` with your credentials:
+Update `.mcp.json` (Claude Code/Cursor/Antigravity) or `opencode.json` (OpenCode) with your credentials:
 
 - **obsidian** — Set `OBSIDIAN_API_KEY` to your Local REST API key
 - **context7** — No configuration needed
@@ -197,7 +201,7 @@ This boilerplate enforces an 8-phase lifecycle via hooks:
 | 6 | Implementation | Developer + FE Developer | Tests pass per story |
 | 7 | Integration | Developer + FE Developer + HoE | User approves release |
 
-Source code and git operations are **blocked** until Phase 6 (Implementation). This is enforced by the `pre-bash.sh` hook.
+Source code operations are **blocked** until Phase 6 (Implementation). This is enforced by the `pre-bash.sh` hook. Git commands are allowed in all phases.
 
 Phases 4 and 5 can run in parallel — Architecture and Backlog are independent work streams.
 
@@ -216,33 +220,36 @@ Enforced by the `post-edit.sh` hook:
 
 ## Cross-IDE File Mapping
 
-| Concept | Claude Code | Cursor | Antigravity |
-|---------|------------|--------|-------------|
-| Main instructions | `CLAUDE.md` | `.cursor/rules/project-instructions.mdc` | `.agent/rules/project-instructions.md` + `AGENTS.md` |
-| Agent definitions | `.claude/agents/*.md` | `.cursor/rules/agents/*.mdc` | `.agent/rules/agents/*.md` |
-| Skills | `.claude/skills/*/SKILL.md` | `.cursor/rules/skills/*.mdc` | `.agent/skills/*/SKILL.md` |
-| Protocols | `.claude/protocols/*.md` | `.cursor/rules/protocols/*.mdc` | `.agent/rules/protocols/*.md` |
-| Hooks | `.claude/hooks/*.sh` | N/A (Cursor has no hooks) | N/A |
-| Slash commands | CLAUDE.md Quick Start | N/A | `.agent/workflows/*.md` |
-| Settings | `.claude/settings.json` | Cursor settings UI | Antigravity settings UI |
+| Concept | Claude Code | Cursor | Antigravity | OpenCode |
+|---------|------------|--------|-------------|----------|
+| Main instructions | `CLAUDE.md` | `.cursor/rules/project-instructions.mdc` | `.agent/rules/project-instructions.md` + `AGENTS.md` | `AGENTS.md` (native) + `CLAUDE.md` (fallback) |
+| Agent definitions | `.claude/agents/*.md` | `.cursor/rules/agents/*.mdc` | `.agent/rules/agents/*.md` | `.opencode/agents/*.md` |
+| Skills | `.claude/skills/*/SKILL.md` | `.cursor/rules/skills/*.mdc` | `.agent/skills/*/SKILL.md` | Referenced via `instructions` in `opencode.json` |
+| Protocols | `.claude/protocols/*.md` | `.cursor/rules/protocols/*.mdc` | `.agent/rules/protocols/*.md` | `.opencode/protocols/*.md` |
+| Hooks | `.claude/hooks/*.sh` | N/A (Cursor has no hooks) | N/A | N/A |
+| Slash commands | CLAUDE.md Quick Start | N/A | `.agent/workflows/*.md` | N/A (use `@agent` mentions) |
+| Settings | `.claude/settings.json` | Cursor settings UI | Antigravity settings UI | `opencode.json` |
+| MCP config | `.mcp.json` | `.mcp.json` | `.mcp.json` | `opencode.json` `mcp` section |
 
 ## Customization
 
 ### Adding agents
 
-1. Create agent file in all three IDE configs:
+1. Create agent file in all four IDE configs:
    - `.claude/agents/{name}.md` with Claude YAML frontmatter
    - `.cursor/rules/agents/{name}.mdc` with `.mdc` frontmatter
    - `.agent/rules/agents/{name}.md` as plain markdown
+   - `.opencode/agents/{name}.md` with OpenCode YAML frontmatter (`description`, `mode`, `tools`)
 2. Add to `CLAUDE.md` Agents table, `AGENTS.md`, and `.cursor/rules/project-instructions.mdc`
 3. Update `post-edit.sh` if the agent owns vault folders
 
 ### Adding protocols
 
-1. Create the protocol in all three configs:
+1. Create the protocol in all four configs:
    - `.claude/protocols/{name}.md`
    - `.cursor/rules/protocols/{name}.mdc`
    - `.agent/rules/protocols/{name}.md`
+   - `.opencode/protocols/{name}.md`
 2. Reference in agent files and `CLAUDE.md`
 
 ### Adding skills
@@ -251,6 +258,7 @@ Enforced by the `post-edit.sh` hook:
    - `.claude/skills/{name}/SKILL.md` (Claude + Antigravity use same format)
    - Copy to `.agent/skills/{name}/SKILL.md`
    - Create `.cursor/rules/skills/{name}.mdc` with `.mdc` frontmatter wrapper
+   - For OpenCode: add path to `instructions` array in `opencode.json`
 2. Reference in relevant agent `docs_index` sections
 
 ### Changing phases
@@ -261,7 +269,7 @@ Valid phases: Setup, Research & Discovery, Strategy, Product Spec, Architecture,
 ### Removing optional MCP servers
 
 Maestro, Figma, Talk-to-Figma, Pencil, and GitHub are optional. If your project doesn't need them:
-1. Remove the server from `.mcp.json`
+1. Remove the server from `.mcp.json` and `opencode.json`
 2. Remove from `enabledMcpjsonServers` in `.claude/settings.local.json`
 3. Remove related prerequisites
 4. Everything else works without them
@@ -280,6 +288,13 @@ claude --agent designer
 claude --agent uxe
 ```
 
+```bash
+# OpenCode — agents appear as switchable modes (Tab key)
+opencode
+# Then use Tab to cycle between: head-of-product, head-of-engineering,
+# developer, frontend-developer, designer, uxe
+```
+
 Check hooks are executable:
 
 ```bash
@@ -293,10 +308,12 @@ ls -la .claude/hooks/
 |-------|----------|
 | Hook blocked unexpectedly | Check `.claude/.current-agent` — it may be stale. Delete it and restart session. |
 | "No API key found" from audit script | Ensure Obsidian is running with Local REST API enabled. Set `OBSIDIAN_API_KEY` env var. |
-| Phase gating too restrictive during setup | Temporarily set Phase to "Implementation" in `project_state.md`, then reset when done. |
+| Phase gating too restrictive during setup | Temporarily set Phase to "Implementation" in `project_state.md`, then reset when done. Git commands are always allowed. |
 | Hooks not triggering | Verify `settings.json` is in `.claude/` (not `.claude/settings/`). Check `chmod +x` on `.sh` files. |
 | Agent can't edit a file it should own | Check `post-edit.sh` — the orchestrator is always allowed. Run as default session to bypass. |
 | Python not found in hooks | Hooks use `python3`. Ensure it's in your PATH. |
 | Agent teams not working | Verify `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` is set in `.claude/settings.json` under `env`. |
 | npm EPERM on skills install | Run `sudo chown -R $(whoami) ~/.npm` to fix root-owned cache files. |
 | `{{Project}}` warning on session start | Run workspace initialization to replace all placeholders. |
+| OpenCode agents not appearing | Verify `.opencode/agents/*.md` files exist with valid YAML frontmatter. Run `opencode agent create` to test. |
+| OpenCode MCP servers not connecting | Check `opencode.json` `mcp` section. Use `opencode mcp list` to verify. |

@@ -34,9 +34,9 @@
 - [x] Read vault docs
 - [x] Ask user questions
 - [x] Write to vault (project_state.md only)
+- [x] Git commit/push
 - [ ] Web research
 - [ ] Write source code
-- [ ] Git commit/push
 - [ ] Install dependencies
 
 ### Research & Discovery
@@ -44,8 +44,8 @@
 - [x] Web research
 - [x] Ask user questions
 - [x] Write to vault
+- [x] Git commit/push
 - [ ] Write source code
-- [ ] Git commit/push
 - [ ] Install dependencies
 
 ### Strategy
@@ -53,8 +53,8 @@
 - [x] Web research
 - [x] Ask user questions
 - [x] Write to vault
+- [x] Git commit/push
 - [ ] Write source code
-- [ ] Git commit/push
 - [ ] Install dependencies
 
 ### Product Spec
@@ -63,8 +63,8 @@
 - [x] Ask user questions
 - [x] Write to vault
 - [x] Write to Figma/Pencil
+- [x] Git commit/push
 - [ ] Write source code (except design tokens + Storybook)
-- [ ] Git commit/push (except design tokens + Storybook)
 - [ ] Install dependencies
 
 ### Architecture
@@ -72,8 +72,8 @@
 - [x] Web research
 - [x] Ask user questions
 - [x] Write to vault
+- [x] Git commit/push
 - [ ] Write source code
-- [ ] Git commit/push
 - [ ] Install dependencies
 
 ### Backlog
@@ -81,8 +81,8 @@
 - [x] Web research
 - [x] Ask user questions
 - [x] Write to vault
+- [x] Git commit/push
 - [ ] Write source code
-- [ ] Git commit/push
 - [ ] Install dependencies
 
 ### Implementation

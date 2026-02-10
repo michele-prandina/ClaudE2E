@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Hook: PreToolUse (Bash)
-# Phase gating: blocks code/git operations outside Implementation/Integration
+# Phase gating: blocks code operations outside Implementation/Integration
 # Commit format: enforces conventional commit messages
 
 set -euo pipefail
@@ -78,7 +78,6 @@ for pattern in always_allowed:
 
 # Blocked during non-implementation phases
 blocked = [
-    r'^git\s+(commit|push|add|merge|rebase|checkout\s+-b)',
     r'^python',
     r'^node\b',
     r'^npm\s+(install|run|start|build|test)',
@@ -100,7 +99,7 @@ print('allowed')
 " 2>/dev/null || echo "allowed")
 
     if [ "$IS_BLOCKED" = "blocked" ]; then
-        echo "BLOCKED: Code/git operations are only allowed during Implementation or Integration phase."
+        echo "BLOCKED: Code operations are only allowed during Implementation or Integration phase."
         echo "Current phase: $PHASE"
         echo "Update .claude/project_state.md to change phase."
         exit 2
