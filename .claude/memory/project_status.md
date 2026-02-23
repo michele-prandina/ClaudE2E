@@ -5,7 +5,7 @@
 **Status**: Initializing workspace
 
 ## Current Focus
-- Setting up dual-agent workspace infrastructure
+- Setting up workspace infrastructure
 
 ## Key Decisions
 - (none yet)

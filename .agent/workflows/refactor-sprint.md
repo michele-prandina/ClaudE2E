@@ -14,4 +14,4 @@ Prerequisites: Run /slop-scan first and have a report ready.
 5. Summarize what was cleaned and what was skipped
 6. Update affected CLAUDE.md files
 
-Use Gemini 3 Flash for quick items. Switch to Gemini 3 Pro for cross-module work.
+Use a fast model for quick items. Switch to a stronger model for cross-module work.

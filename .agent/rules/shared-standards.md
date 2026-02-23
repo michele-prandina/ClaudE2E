@@ -38,8 +38,3 @@
 - `maestro` — UI test automation
 - `github` — PR, issue, code review operations
 
-## Dual-Agent Awareness
-This workspace uses Claude Code (Opus 4.6) + Antigravity (Gemini 3 Pro).
-- Do NOT modify `CLAUDE.md` or `.claude/` files — those belong to Claude Code
-- Always commit after completing a task
-- Check git status before starting work to see what Claude Code changed

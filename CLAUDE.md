@@ -81,14 +81,6 @@ When you modify, move, or delete files across directories:
 2. If a module's scope changed, update its CLAUDE.md
 3. Remove references to deprecated patterns
 
-## Dual-Agent Project
-This workspace uses Claude Code (Opus 4.6) + Antigravity (Gemini 3 Pro/Flash).
-- Shared knowledge: `docs/` (both agents read)
-- Claude Code owns: CLAUDE.md files, auto-memory, architecture decisions
-- Antigravity owns: `.agent/rules/`, Knowledge Items, refactoring sprints
-- NEVER edit files another agent is currently working on
-- Always commit after completing a task before switching agents
-
 ## Known Pitfalls
 
 | Issue | Solution |

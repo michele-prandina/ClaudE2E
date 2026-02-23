@@ -1,4 +1,4 @@
-# Review Claude Code Changes
+# Review Recent Changes
 
 1. Run `git log --oneline -10` to see recent commits
 2. Run `git diff main..HEAD` to see all changes

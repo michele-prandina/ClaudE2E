@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Hook: SessionStart
-# Reads JSON stdin, tracks current agent, auto-starts MCP serve
+# Reads JSON stdin, tracks current agent
 
 set -euo pipefail
 
@@ -35,30 +35,3 @@ if [ -f "$CLAUDE_MD" ]; then
         echo "WARNING: Setup incomplete — CLAUDE.md contains {{Project}} placeholders." >&2
     fi
 fi
-
-# --- AUTO-START claude mcp serve ---
-MCP_PID_FILE="/tmp/claude-mcp-serve.pid"
-MCP_LOG_FILE="/tmp/claude-mcp-serve.log"
-
-start_mcp_serve() {
-    if [ -f "$MCP_PID_FILE" ]; then
-        local pid
-        pid=$(cat "$MCP_PID_FILE" 2>/dev/null || echo "")
-        if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
-            return 0
-        fi
-        rm -f "$MCP_PID_FILE"
-    fi
-
-    if pgrep -f "claude mcp serve" >/dev/null 2>&1; then
-        return 0
-    fi
-
-    (
-        unset CLAUDE_PROJECT_DIR CLAUDE_SESSION_ID CLAUDE_CODE_ENTRY_POINT
-        nohup claude mcp serve > "$MCP_LOG_FILE" 2>&1 &
-        echo $! > "$MCP_PID_FILE"
-    )
-}
-
-start_mcp_serve

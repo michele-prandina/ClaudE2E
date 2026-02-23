@@ -1,6 +1,6 @@
 # Full Codebase Slop Scan
 
-Use Gemini 3 Pro's full context window for this scan.
+Use a model with large context window for this scan.
 
 1. Ingest the entire project source directories
 2. Identify and report:
