@@ -1,4 +1,37 @@
+# OS
 .DS_Store
-.mcp.json
-.claude/settings.local.json
-obsidian-vault/.obsidian/*
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Dependencies
+node_modules/
+.pnp/
+.pnp.js
+
+# Build
+dist/
+build/
+*.egg-info/
+__pycache__/
+*.pyc
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# Testing
+coverage/
+.pytest_cache/
+
+# Claude Code internal (keep .claude/ tracked)
+.claude/.current-agent

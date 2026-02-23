@@ -1,6 +1,17 @@
 {
+  "permissions": {
+    "allow": ["WebSearch", "WebFetch", "Write", "Edit", "Bash"]
+  },
   "hooks": {
     "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '## Session Context' && echo 'Branch:' $(git branch --show-current 2>/dev/null || echo 'not a git repo') && echo 'Recent changes:' && git diff --stat HEAD~3 2>/dev/null | tail -8 && echo '---' && if [ -f .claude/memory/project_status.md ]; then echo '## Active Task' && head -30 .claude/memory/project_status.md; else echo 'No active task file.'; fi"
+          }
+        ]
+      },
       {
         "hooks": [
           {
@@ -31,22 +42,18 @@
           }
         ]
       }
+    ],
+    "PreCompact": [
+      {
+        "matcher": "auto",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo 'Context compacting. Review what was learned this session and update auto-memory with any new patterns, corrections, or gotchas before context is reduced.'"
+          }
+        ]
+      }
     ]
-  },
-  "sandbox": {
-    "enabled": true,
-    "mode": "auto-allow",
-    "allowUnsandboxedCommands": false,
-    "network": {
-      "allowedDomains": [
-        "registry.npmjs.org",
-        "api.anthropic.com",
-        "github.com",
-        "api.github.com",
-        "pypi.org",
-        "expo.dev"
-      ]
-    }
   },
   "env": {
     "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
