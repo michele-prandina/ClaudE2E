@@ -1,9 +1,0 @@
-{
-  "mcpServers": {
-    "claude-code": {
-      "command": "claude",
-      "args": ["mcp", "serve"],
-      "description": "Delegate complex reasoning to Claude Opus 4.6"
-    }
-  }
-}
