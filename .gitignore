@@ -35,3 +35,5 @@ coverage/
 
 # Claude Code internal (keep .claude/ tracked)
 .claude/.current-agent
+
+__archived/
